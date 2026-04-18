@@ -1,0 +1,20 @@
+# Format: name|description|type|attackBonus|healAmount|roomNumber
+# roomNumber 0 = not placed in a room (granted via puzzle reward or monster drop)
+
+# Weapons (dropped by monsters)
+Rusted Knife|A sharp kitchen knife. Still holds an edge.|WEAPON|3|0|0
+Broken Sword|A damaged sword that still cuts well.|WEAPON|5|0|0
+Heavy Axe|A large axe capable of heavy strikes.|WEAPON|7|0|0
+Shadow Blade|A blade infused with dark energy. Hums faintly.|WEAPON|9|0|0
+
+# Consumables (dropped by monsters or puzzle rewards)
+Med Kit|A small medical kit with basic supplies.|CONSUMABLE|0|5|0
+
+# Keys (granted by puzzle rewards)
+Brass Key|A small brass key with worn markings. Unlocks the Library.|KEY|0|0|0
+StairA Key|A heavy key labeled with the letter A. Unlocks Stair A Hall.|KEY|0|0|0
+StairB Key|A cold metal key marked with the letter B. Unlocks Stair B Hall.|KEY|0|0|0
+R19 Key|A key stamped with the final case number. Unlocks the conservatory.|KEY|0|0|0
+
+# Access items (granted by puzzle rewards)
+Observatory Access Card|A plastic card with a magnetic strip. Grants observatory access.|KEY|0|0|0
