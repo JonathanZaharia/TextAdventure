@@ -1,12 +1,15 @@
 package adventure;
 
+import java.util.List;
+import java.util.Scanner;
+
 public class Puzzle {
 
     private final String name;
     private final String description;
     private final String correctAnswer;
     private final String successMessage;
-    private final String rewardItemName;  // item granted on solve, empty if none
+    private final String rewardItemName; // item granted on solve, empty if none
     private final int allowedAttempts;
     private final int roomNumber;
 
@@ -15,42 +18,78 @@ public class Puzzle {
     private boolean failedForThisVisit;
 
     public Puzzle(String name, String description, String correctAnswer,
-                  String successMessage, String rewardItemName,
-                  int allowedAttempts, int roomNumber) {
-        this.name             = name;
-        this.description      = description;
-        this.correctAnswer    = correctAnswer;
-        this.successMessage   = successMessage;
-        this.rewardItemName   = rewardItemName != null ? rewardItemName : "";
-        this.allowedAttempts  = allowedAttempts;
+            String successMessage, String rewardItemName,
+            int allowedAttempts, int roomNumber) {
+        this.name = name;
+        this.description = description;
+        this.correctAnswer = correctAnswer;
+        this.successMessage = successMessage;
+        this.rewardItemName = rewardItemName != null ? rewardItemName : "";
+        this.allowedAttempts = allowedAttempts;
         this.remainingAttempts = allowedAttempts;
-        this.roomNumber       = roomNumber;
-        this.solved           = false;
+        this.roomNumber = roomNumber;
+        this.solved = false;
         this.failedForThisVisit = false;
     }
 
-    public String getName()           { return name; }
-    public String getDescription()    { return description; }
-    public String getSuccessMessage() { return successMessage; }
-    public String getRewardItemName() { return rewardItemName; }
-    public boolean hasItemReward()    { return !rewardItemName.isEmpty(); }
-    public int  getRoomNumber()       { return roomNumber; }
-    public boolean isSolved()         { return solved; }
-    public int  getRemainingAttempts(){ return remainingAttempts; }
-    public boolean hasAttemptsRemaining() { return remainingAttempts > 0; }
-    public boolean isFailedForThisVisit() { return failedForThisVisit; }
+    public String getName() {
+        return name;
+    }
 
-    public void setFailedForThisVisit() { this.failedForThisVisit = true; }
+    public String getDescription() {
+        return description;
+    }
 
-    // Called when player leaves a room — resets visit flag and attempts if still unsolved
+    public String getSuccessMessage() {
+        return successMessage;
+    }
+
+    public String getRewardItemName() {
+        return rewardItemName;
+    }
+
+    public boolean hasItemReward() {
+        return !rewardItemName.isEmpty();
+    }
+
+    public int getRoomNumber() {
+        return roomNumber;
+    }
+
+    public boolean isSolved() {
+        return solved;
+    }
+
+    public int getRemainingAttempts() {
+        return remainingAttempts;
+    }
+
+    public boolean hasAttemptsRemaining() {
+        return remainingAttempts > 0;
+    }
+
+    public boolean isFailedForThisVisit() {
+        return failedForThisVisit;
+    }
+
+    public void setFailedForThisVisit() {
+        this.failedForThisVisit = true;
+    }
+
+    // Called when player leaves a room — resets visit flag and attempts if still
+    // unsolved
     public void clearFailedForThisVisit() {
         this.failedForThisVisit = false;
-        if (!this.solved) this.remainingAttempts = allowedAttempts;
+        if (!this.solved)
+            this.remainingAttempts = allowedAttempts;
     }
 
     // Attempt an answer; updates solved/remainingAttempts automatically
     public boolean attemptAnswer(String userAnswer) {
-        if (userAnswer == null) { remainingAttempts--; return false; }
+        if (userAnswer == null) {
+            remainingAttempts--;
+            return false;
+        }
 
         if (userAnswer.trim().equalsIgnoreCase(correctAnswer.trim())) {
             this.solved = true;
@@ -63,17 +102,53 @@ public class Puzzle {
 
     // Fully reset puzzle (used on game restart)
     public void reset() {
-        this.solved             = false;
-        this.remainingAttempts  = allowedAttempts;
+        this.solved = false;
+        this.remainingAttempts = allowedAttempts;
         this.failedForThisVisit = false;
     }
 
     // Find a puzzle by room number
     public static Puzzle findByRoomNumber(Puzzle[] puzzles, int roomNumber) {
-        if (puzzles == null) return null;
+        if (puzzles == null)
+            return null;
         for (Puzzle puzzle : puzzles) {
-            if (puzzle.getRoomNumber() == roomNumber) return puzzle;
+            if (puzzle.getRoomNumber() == roomNumber)
+                return puzzle;
         }
         return null;
+    }
+
+    public boolean attemptPuzzle(List<Item> allItems, Player player, Scanner input) {
+        System.out.println("\n*** PUZZLE: " + getName() + " ***");
+        System.out.println(getDescription());
+
+        while (hasAttemptsRemaining()) {
+            System.out.print("Your answer: ");
+            String answer = input.nextLine().trim();
+
+            if (attemptAnswer(answer)) {
+                String msg = getSuccessMessage();
+                System.out.println(msg.isEmpty() ? "Puzzle solved!" : msg);
+
+                if (hasItemReward()) {
+                    for (Item item : allItems) {
+                        if (item.getName().equalsIgnoreCase(getRewardItemName())) {
+                            player.addItem(item);
+                            System.out.println("Received: " + item.getName());
+                            break;
+                        }
+                    }
+                }
+                return true;
+            } else {
+                if (hasAttemptsRemaining()) {
+                    System.out.println("Incorrect. " + getRemainingAttempts() + " attempt(s) remaining.");
+                } else {
+                    System.out.println("Incorrect. No attempts remaining.");
+                }
+            }
+        }
+
+        return false;
     }
 }

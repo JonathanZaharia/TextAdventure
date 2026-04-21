@@ -1,5 +1,7 @@
 package adventure;
 
+import adventure.CombatSystem;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -8,22 +10,19 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Scanner;
 
 public class Main {
 
-    private static final String ROOMS_FILE    = "Rooms.txt";
-    private static final String ITEMS_FILE    = "Items.txt";
-    private static final String PUZZLE_FILE   = "Puzzle.txt";
+    private static final String ROOMS_FILE = "Rooms.txt";
+    private static final String ITEMS_FILE = "Items.txt";
+    private static final String PUZZLE_FILE = "Puzzle.txt";
     private static final String MONSTERS_FILE = "Monsters.txt";
 
     // Player starting values — change here, not in Player.java
-    private static final int PLAYER_START_ROOM  = 1;
-    private static final int PLAYER_MAX_HEALTH  = 20;
+    private static final int PLAYER_START_ROOM = 1;
+    private static final int PLAYER_MAX_HEALTH = 20;
     private static final int PLAYER_BASE_DAMAGE = 2;
-
-    private static final Random random = new Random();
 
     public static void main(String[] args) {
         Map<Integer, Room> rooms = new HashMap<>();
@@ -35,7 +34,7 @@ public class Main {
         }
 
         loadItems(ITEMS_FILE, rooms, allItems);
-        Puzzle[]  puzzles  = loadPuzzles(PUZZLE_FILE);
+        Puzzle[] puzzles = loadPuzzles(PUZZLE_FILE);
         Monster[] monsters = loadMonsters(MONSTERS_FILE);
 
         int startRoom = rooms.containsKey(PLAYER_START_ROOM)
@@ -48,18 +47,19 @@ public class Main {
             System.out.println("Welcome to Mrs. Blackwood's Mansion!");
             System.out.println("Type HELP for commands.\n");
 
-            boolean running          = true;
-            boolean justEnteredRoom  = true;
-            int     previousRoom     = -1;
+            boolean running = true;
+            boolean justEnteredRoom = true;
+            int previousRoom = -1;
 
             while (running) {
-                int  currentRoomNumber = player.getCurrentRoomNumber();
-                Room current           = rooms.get(currentRoomNumber);
+                int currentRoomNumber = player.getCurrentRoomNumber();
+                Room current = rooms.get(currentRoomNumber);
 
                 // When leaving a room, reset puzzle visit state for the room just left
                 if (previousRoom != -1 && previousRoom != currentRoomNumber) {
                     Puzzle prev = Puzzle.findByRoomNumber(puzzles, previousRoom);
-                    if (prev != null) prev.clearFailedForThisVisit();
+                    if (prev != null)
+                        prev.clearFailedForThisVisit();
                 }
                 previousRoom = currentRoomNumber;
 
@@ -67,14 +67,17 @@ public class Main {
                     // Monster encounter on entry
                     Monster monster = Monster.findActiveByRoomNumber(monsters, currentRoomNumber);
                     if (monster != null) {
-                        boolean survived = handleMonsterEncounter(monster, allItems, player, current, input);
+                        boolean survived = CombatSystem.handleMonsterEncounter(monster, allItems, player, current,
+                                input);
                         if (!survived) {
                             running = handleGameOver(input);
                             if (running) {
                                 // Restart — reset player and all game state
                                 player = new Player(startRoom, PLAYER_MAX_HEALTH, PLAYER_BASE_DAMAGE);
-                                for (Puzzle p : puzzles) p.reset();
-                                for (Room   r : rooms.values()) r.setVisited(false);
+                                for (Puzzle p : puzzles)
+                                    p.reset();
+                                for (Room r : rooms.values())
+                                    r.setVisited(false);
                             }
                             justEnteredRoom = true;
                             continue;
@@ -84,8 +87,9 @@ public class Main {
                     // Puzzle check on entry
                     Puzzle roomPuzzle = Puzzle.findByRoomNumber(puzzles, currentRoomNumber);
                     if (roomPuzzle != null && !roomPuzzle.isSolved() && !roomPuzzle.isFailedForThisVisit()) {
-                        boolean solved = handlePuzzle(roomPuzzle, allItems, player, input);
-                        if (!solved) roomPuzzle.setFailedForThisVisit();
+                        boolean solved = roomPuzzle.attemptPuzzle(allItems, player, input);
+                        if (!solved)
+                            roomPuzzle.setFailedForThisVisit();
                     }
 
                     displayRoom(current, puzzles, monsters);
@@ -94,16 +98,17 @@ public class Main {
 
                 System.out.print("\nCommand: ");
                 String inputLine = input.nextLine().trim();
-                if (inputLine.isEmpty()) continue;
+                if (inputLine.isEmpty())
+                    continue;
 
-                String[] parts    = inputLine.split(" ", 2);
-                String   cmd      = parts[0].toUpperCase();
-                String   argument = parts.length > 1 ? parts[1].trim() : "";
+                String[] parts = inputLine.split(" ", 2);
+                String cmd = parts[0].toUpperCase();
+                String argument = parts.length > 1 ? parts[1].trim() : "";
 
                 switch (cmd) {
 
                     case "N", "E", "S", "W", "NORTH", "SOUTH", "EAST", "WEST" -> {
-                        String dir  = cmd.substring(0, 1);
+                        String dir = cmd.substring(0, 1);
                         int exitDest = current.getExit(dir);
 
                         if (exitDest <= 0 || !rooms.containsKey(exitDest)) {
@@ -142,7 +147,7 @@ public class Main {
                         if (argument.isEmpty()) {
                             System.out.println("Specify an item name. Example: TAKE Keycard");
                         } else {
-                            handlePickup(player, current, argument);
+                            player.pickupItem(current, argument);
                         }
                     }
 
@@ -158,7 +163,7 @@ public class Main {
                         if (argument.isEmpty()) {
                             System.out.println("Specify an item name. Example: DROP Keycard");
                         } else {
-                            handleDrop(player, current, argument);
+                            player.dropItem(current, argument);
                         }
                     }
 
@@ -166,17 +171,17 @@ public class Main {
                         if (argument.isEmpty()) {
                             System.out.println("Specify a weapon. Example: EQUIP Rusty Knife");
                         } else {
-                            handleEquip(player, argument);
+                            player.equipWeapon(argument);
                         }
                     }
 
-                    case "UNEQUIP" -> handleUnequip(player);
+                    case "UNEQUIP" -> player.unequipWeapon();
 
                     case "HEAL", "CONSUME" -> {
                         if (argument.isEmpty()) {
                             System.out.println("Specify an item. Example: HEAL Med Kit");
                         } else {
-                            handleHeal(player, argument);
+                            player.consumeHealingItem(argument);
                         }
                     }
 
@@ -185,13 +190,15 @@ public class Main {
                         if (monster == null) {
                             System.out.println("There is no monster here.");
                         } else {
-                            boolean survived = handleCombat(monster, allItems, player, current, input);
+                            boolean survived = CombatSystem.handleCombat(monster, allItems, player, current, input);
                             if (!survived) {
                                 running = handleGameOver(input);
                                 if (running) {
                                     player = new Player(startRoom, PLAYER_MAX_HEALTH, PLAYER_BASE_DAMAGE);
-                                    for (Puzzle p : puzzles) p.reset();
-                                    for (Room   r : rooms.values()) r.setVisited(false);
+                                    for (Puzzle p : puzzles)
+                                        p.reset();
+                                    for (Room r : rooms.values())
+                                        r.setVisited(false);
                                 }
                                 justEnteredRoom = true;
                             }
@@ -204,7 +211,8 @@ public class Main {
                             System.out.println("There is no monster here.");
                         } else {
                             monster.setIgnored();
-                            System.out.println("You back away. The " + monster.getName() + " lets you go and will not appear again.");
+                            System.out.println("You back away. The " + monster.getName()
+                                    + " lets you go and will not appear again.");
                         }
                     }
 
@@ -217,14 +225,16 @@ public class Main {
                         } else if (roomPuzzle.isFailedForThisVisit()) {
                             System.out.println("You have no attempts remaining for this puzzle right now.");
                         } else {
-                            boolean solved = handlePuzzle(roomPuzzle, allItems, player, input);
-                            if (!solved) roomPuzzle.setFailedForThisVisit();
+                            boolean solved = roomPuzzle.attemptPuzzle(allItems, player, input);
+                            if (!solved)
+                                roomPuzzle.setFailedForThisVisit();
                         }
                     }
 
                     case "INVENTORY", "INV", "I" -> displayInventory(player);
 
-                    case "HEALTH", "HP" -> System.out.println("Health: " + player.getCurrentHealth() + "/" + player.getMaxHealth());
+                    case "HEALTH", "HP" ->
+                        System.out.println("Health: " + player.getCurrentHealth() + "/" + player.getMaxHealth());
 
                     case "HELP" -> printHelp();
 
@@ -243,190 +253,248 @@ public class Main {
     // Command handlers
     // -------------------------------------------------------------------------
 
-    private static void handlePickup(Player player, Room room, String itemName) {
-        Item item = room.findItem(itemName);
-        if (item == null) {
-            System.out.println("There is no item called '" + itemName + "' here.");
-            return;
-        }
-        player.addItem(item);
-        room.removeItem(item);
-        System.out.println(item.getName() + " added to inventory.");
-    }
+    // TODO: Move to Player class
+    /*
+     * private static void handlePickup(Player player, Room room, String itemName) {
+     * Item item = room.findItem(itemName);
+     * if (item == null) {
+     * System.out.println("There is no item called '" + itemName + "' here.");
+     * return;
+     * }
+     * player.addItem(item);
+     * room.removeItem(item);
+     * System.out.println(item.getName() + " added to inventory.");
+     * }
+     */
 
     private static void handleInspect(Player player, Room room, Monster[] monsters, String target) {
         // Check room items first, then inventory, then monster
         Item roomItem = room.findItem(target);
-        if (roomItem != null) { System.out.println(roomItem.getName() + ": " + roomItem.getDescription()); return; }
+        if (roomItem != null) {
+            System.out.println(roomItem.getName() + ": " + roomItem.getDescription());
+            return;
+        }
 
         Item invItem = player.getItemByName(target);
-        if (invItem != null) { System.out.println(invItem.getName() + ": " + invItem.getDescription()); return; }
+        if (invItem != null) {
+            System.out.println(invItem.getName() + ": " + invItem.getDescription());
+            return;
+        }
 
         Monster monster = Monster.findActiveByRoomNumber(monsters, room.getRoomNumber());
         if (monster != null && monster.getName().equalsIgnoreCase(target)) {
             System.out.println(monster.getName() + ": " + monster.getDescription());
-            System.out.println("Attack: " + monster.getAttackDamage() + " | HP: " + monster.getCurrentHealth() + "/" + monster.getMaxHealth());
+            System.out.println("Attack: " + monster.getAttackDamage() + " | HP: " + monster.getCurrentHealth() + "/"
+                    + monster.getMaxHealth());
             return;
         }
 
         System.out.println("There is nothing like that to inspect here.");
     }
 
-    private static void handleDrop(Player player, Room room, String itemName) {
-        Item item = player.removeItemByName(itemName);
-        if (item == null) {
-            System.out.println("You do not have '" + itemName + "' in your inventory.");
-            return;
-        }
-        room.addItem(item);
-        System.out.println(item.getName() + " dropped in " + room.getName() + ".");
-    }
+    // TODO: Move to Player class
+    /*
+     * private static void handleDrop(Player player, Room room, String itemName) {
+     * Item item = player.removeItemByName(itemName);
+     * if (item == null) {
+     * System.out.println("You do not have '" + itemName + "' in your inventory.");
+     * return;
+     * }
+     * room.addItem(item);
+     * System.out.println(item.getName() + " dropped in " + room.getName() + ".");
+     * }
+     */
 
-    private static void handleEquip(Player player, String itemName) {
-        Item item = player.getItemByName(itemName);
-        if (item == null) { System.out.println("You do not have '" + itemName + "'."); return; }
-        if (!player.equipItem(item)) { System.out.println(item.getName() + " cannot be equipped — it is not a weapon."); return; }
-        System.out.println(item.getName() + " equipped. Attack: " + player.getAttackDamage());
-    }
+    // TODO: Move to Player class
+    /*
+     * private static void handleEquip(Player player, String itemName) {
+     * Item item = player.getItemByName(itemName);
+     * if (item == null) { System.out.println("You do not have '" + itemName +
+     * "'."); return; }
+     * if (!player.equipItem(item)) { System.out.println(item.getName() +
+     * " cannot be equipped — it is not a weapon."); return; }
+     * System.out.println(item.getName() + " equipped. Attack: " +
+     * player.getAttackDamage());
+     * }
+     */
 
-    private static void handleUnequip(Player player) {
-        Item prev = player.unequipItem();
-        if (prev == null) { System.out.println("Nothing is equipped."); return; }
-        System.out.println(prev.getName() + " unequipped. Attack: " + player.getAttackDamage());
-    }
+    // TODO: Move to Player class
+    /*
+     * private static void handleUnequip(Player player) {
+     * Item prev = player.unequipItem();
+     * if (prev == null) { System.out.println("Nothing is equipped."); return; }
+     * System.out.println(prev.getName() + " unequipped. Attack: " +
+     * player.getAttackDamage());
+     * }
+     */
 
-    private static void handleHeal(Player player, String itemName) {
-        Item item = player.getItemByName(itemName);
-        if (item == null) { System.out.println("You do not have '" + itemName + "'."); return; }
-        if (!item.isConsumable()) { System.out.println(item.getName() + " cannot be consumed."); return; }
-        int before = player.getCurrentHealth();
-        player.heal(item.getHealAmount());
-        player.removeItem(item);
-        System.out.println("Used " + item.getName() + ". Restored " + (player.getCurrentHealth() - before) + " HP. Health: " + player.getCurrentHealth() + "/" + player.getMaxHealth());
-    }
+    // TODO: Move to Player class
+    /*
+     * private static void handleHeal(Player player, String itemName) {
+     * Item item = player.getItemByName(itemName);
+     * if (item == null) { System.out.println("You do not have '" + itemName +
+     * "'."); return; }
+     * if (!item.isConsumable()) { System.out.println(item.getName() +
+     * " cannot be consumed."); return; }
+     * int before = player.getCurrentHealth();
+     * player.heal(item.getHealAmount());
+     * player.removeItem(item);
+     * System.out.println("Used " + item.getName() + ". Restored " +
+     * (player.getCurrentHealth() - before) + " HP. Health: " +
+     * player.getCurrentHealth() + "/" + player.getMaxHealth());
+     * }
+     */
 
     // -------------------------------------------------------------------------
     // Puzzle handler — same logic as original, updated for new Puzzle fields
     // -------------------------------------------------------------------------
 
-    private static boolean handlePuzzle(Puzzle puzzle, List<Item> allItems, Player player, Scanner input) {
-        System.out.println("\n*** PUZZLE: " + puzzle.getName() + " ***");
-        System.out.println(puzzle.getDescription());
-
-        while (puzzle.hasAttemptsRemaining()) {
-            System.out.print("Your answer: ");
-            String answer = input.nextLine().trim();
-
-            if (puzzle.attemptAnswer(answer)) {
-                String msg = puzzle.getSuccessMessage();
-                System.out.println(msg.isEmpty() ? "Puzzle solved!" : msg);
-
-                // Grant item reward if any
-                if (puzzle.hasItemReward()) {
-                    for (Item item : allItems) {
-                        if (item.getName().equalsIgnoreCase(puzzle.getRewardItemName())) {
-                            player.addItem(item);
-                            System.out.println("Received: " + item.getName());
-                            break;
-                        }
-                    }
-                }
-                return true;
-            } else {
-                if (puzzle.hasAttemptsRemaining()) {
-                    System.out.println("Incorrect. " + puzzle.getRemainingAttempts() + " attempt(s) remaining.");
-                } else {
-                    System.out.println("Incorrect. No attempts remaining.");
-                }
-            }
-        }
-        return false;
-    }
+    // TODO: Move to Puzzle class
+    /*
+     * private static boolean handlePuzzle(Puzzle puzzle, List<Item> allItems,
+     * Player player, Scanner input) {
+     * System.out.println("\n*** PUZZLE: " + puzzle.getName() + " ***");
+     * System.out.println(puzzle.getDescription());
+     * 
+     * while (puzzle.hasAttemptsRemaining()) {
+     * System.out.print("Your answer: ");
+     * String answer = input.nextLine().trim();
+     * 
+     * if (puzzle.attemptAnswer(answer)) {
+     * String msg = puzzle.getSuccessMessage();
+     * System.out.println(msg.isEmpty() ? "Puzzle solved!" : msg);
+     * 
+     * // Grant item reward if any
+     * if (puzzle.hasItemReward()) {
+     * for (Item item : allItems) {
+     * if (item.getName().equalsIgnoreCase(puzzle.getRewardItemName())) {
+     * player.addItem(item);
+     * System.out.println("Received: " + item.getName());
+     * break;
+     * }
+     * }
+     * }
+     * return true;
+     * } else {
+     * if (puzzle.hasAttemptsRemaining()) {
+     * System.out.println("Incorrect. " + puzzle.getRemainingAttempts() +
+     * " attempt(s) remaining.");
+     * } else {
+     * System.out.println("Incorrect. No attempts remaining.");
+     * }
+     * }
+     * }
+     * return false;
+     * }
+     */
 
     // -------------------------------------------------------------------------
     // Monster handlers
     // -------------------------------------------------------------------------
 
-    // Called on room entry — player chooses to attack or ignore
-    private static boolean handleMonsterEncounter(Monster monster, List<Item> allItems, Player player, Room room, Scanner input) {
-        System.out.println("\n! A " + monster.getName() + " is here !");
-        System.out.println(monster.getDescription());
-        System.out.println("Type ATTACK to fight or IGNORE to back away.");
+    // TODO: Move to Monster/Combat system class
+    /*
+     * // Called on room entry — player chooses to attack or ignore
+     * private static boolean handleMonsterEncounter(Monster monster, List<Item>
+     * allItems, Player player, Room room, Scanner input) {
+     * System.out.println("\n! A " + monster.getName() + " is here !");
+     * System.out.println(monster.getDescription());
+     * System.out.println("Type ATTACK to fight or IGNORE to back away.");
+     * 
+     * while (true) {
+     * System.out.print("Choice: ");
+     * String choice = input.nextLine().trim().toUpperCase();
+     * if (choice.equals("ATTACK")) return handleCombat(monster, allItems, player,
+     * room, input);
+     * if (choice.equals("IGNORE")) {
+     * monster.setIgnored();
+     * System.out.println("You back away. The " + monster.getName() +
+     * " will not appear again.");
+     * return true;
+     * }
+     * System.out.println("Type ATTACK or IGNORE.");
+     * }
+     * }
+     */
 
-        while (true) {
-            System.out.print("Choice: ");
-            String choice = input.nextLine().trim().toUpperCase();
-            if (choice.equals("ATTACK")) return handleCombat(monster, allItems, player, room, input);
-            if (choice.equals("IGNORE")) {
-                monster.setIgnored();
-                System.out.println("You back away. The " + monster.getName() + " will not appear again.");
-                return true;
-            }
-            System.out.println("Type ATTACK or IGNORE.");
-        }
-    }
+    // TODO: Move to Monster/Combat system class
+    /*
+     * // Turn-based combat loop; player can also EQUIP/HEAL during combat
+     * private static boolean handleCombat(Monster monster, List<Item> allItems,
+     * Player player, Room room, Scanner input) {
+     * System.out.println("\n--- COMBAT: " + monster.getName() + " ---");
+     * 
+     * while (!monster.isDead() && !player.isDead()) {
+     * System.out.println("\nYour HP: " + player.getCurrentHealth() + "/" +
+     * player.getMaxHealth()
+     * + "  |  " + monster.getName() + " HP: " + monster.getCurrentHealth());
+     * System.out.
+     * print("Action (ATTACK / HEAL [item] / EQUIP [item] / UNEQUIP / INVENTORY): "
+     * );
+     * 
+     * String line = input.nextLine().trim();
+     * if (line.isEmpty()) continue;
+     * 
+     * String[] parts = line.split(" ", 2);
+     * String action = parts[0].toUpperCase();
+     * String arg = parts.length > 1 ? parts[1].trim() : "";
+     * 
+     * switch (action) {
+     * case "ATTACK" -> {
+     * int damage = player.getAttackDamage();
+     * monster.takeDamage(damage);
+     * System.out.println("You deal " + damage + " damage. " + monster.getName() +
+     * " HP: " + monster.getCurrentHealth());
+     * if (monster.isDead()) {
+     * System.out.println("You defeated the " + monster.getName() + "!");
+     * handleMonsterDrop(monster, allItems, room);
+     * return true;
+     * }
+     * // Monster counter-attacks
+     * monsterAttack(monster, player);
+     * }
+     * case "HEAL" -> { handleHeal(player, arg); if (!player.isDead())
+     * monsterAttack(monster, player); }
+     * case "EQUIP" -> handleEquip(player, arg);
+     * case "UNEQUIP" -> handleUnequip(player);
+     * case "INVENTORY", "INV" -> displayInventory(player);
+     * default -> System.out.println("Unknown combat command.");
+     * }
+     * }
+     * 
+     * return !player.isDead();
+     * }
+     */
 
-    // Turn-based combat loop; player can also EQUIP/HEAL during combat
-    private static boolean handleCombat(Monster monster, List<Item> allItems, Player player, Room room, Scanner input) {
-        System.out.println("\n--- COMBAT: " + monster.getName() + " ---");
+    // TODO: Move to Monster class
+    /*
+     * private static void monsterAttack(Monster monster, Player player) {
+     * double roll = random.nextDouble();
+     * int damage = monster.calculateAttackDamage(roll);
+     * player.takeDamage(damage);
+     * System.out.println(monster.getName() + " attacks for " + damage
+     * + (damage > monster.getAttackDamage() ? " (critical!)" : "")
+     * + ". Your HP: " + player.getCurrentHealth());
+     * if (player.isDead()) System.out.println("You have been defeated...");
+     * }
+     */
 
-        while (!monster.isDead() && !player.isDead()) {
-            System.out.println("\nYour HP: " + player.getCurrentHealth() + "/" + player.getMaxHealth()
-                    + "  |  " + monster.getName() + " HP: " + monster.getCurrentHealth());
-            System.out.print("Action (ATTACK / HEAL [item] / EQUIP [item] / UNEQUIP / INVENTORY): ");
-
-            String line = input.nextLine().trim();
-            if (line.isEmpty()) continue;
-
-            String[] parts  = line.split(" ", 2);
-            String   action = parts[0].toUpperCase();
-            String   arg    = parts.length > 1 ? parts[1].trim() : "";
-
-            switch (action) {
-                case "ATTACK" -> {
-                    int damage = player.getAttackDamage();
-                    monster.takeDamage(damage);
-                    System.out.println("You deal " + damage + " damage. " + monster.getName() + " HP: " + monster.getCurrentHealth());
-                    if (monster.isDead()) {
-                        System.out.println("You defeated the " + monster.getName() + "!");
-                        handleMonsterDrop(monster, allItems, room);
-                        return true;
-                    }
-                    // Monster counter-attacks
-                    monsterAttack(monster, player);
-                }
-                case "HEAL"    -> { handleHeal(player, arg);    if (!player.isDead()) monsterAttack(monster, player); }
-                case "EQUIP"   -> handleEquip(player, arg);
-                case "UNEQUIP" -> handleUnequip(player);
-                case "INVENTORY", "INV" -> displayInventory(player);
-                default -> System.out.println("Unknown combat command.");
-            }
-        }
-
-        return !player.isDead();
-    }
-
-    private static void monsterAttack(Monster monster, Player player) {
-        double roll   = random.nextDouble();
-        int    damage = monster.calculateAttackDamage(roll);
-        player.takeDamage(damage);
-        System.out.println(monster.getName() + " attacks for " + damage
-                + (damage > monster.getAttackDamage() ? " (critical!)" : "")
-                + ". Your HP: " + player.getCurrentHealth());
-        if (player.isDead()) System.out.println("You have been defeated...");
-    }
-
-    // Place monster's drop item in the room after defeat
-    private static void handleMonsterDrop(Monster monster, List<Item> allItems, Room room) {
-        if (!monster.hasDropItem()) return;
-        for (Item item : allItems) {
-            if (item.getName().equalsIgnoreCase(monster.getDropItemName())) {
-                room.addItem(item);
-                System.out.println(monster.getName() + " dropped: " + item.getName() + ". Use TAKE to pick it up.");
-                return;
-            }
-        }
-    }
+    // TODO: Move to Monster class
+    /*
+     * // Place monster's drop item in the room after defeat
+     * private static void handleMonsterDrop(Monster monster, List<Item> allItems,
+     * Room room) {
+     * if (!monster.hasDropItem()) return;
+     * for (Item item : allItems) {
+     * if (item.getName().equalsIgnoreCase(monster.getDropItemName())) {
+     * room.addItem(item);
+     * System.out.println(monster.getName() + " dropped: " + item.getName() +
+     * ". Use TAKE to pick it up.");
+     * return;
+     * }
+     * }
+     * }
+     */
 
     private static boolean handleGameOver(Scanner input) {
         System.out.println("\n=== GAME OVER ===");
@@ -434,8 +502,10 @@ public class Main {
         while (true) {
             System.out.print("Choice: ");
             String c = input.nextLine().trim();
-            if (c.equals("1")) return true;
-            if (c.equals("2")) return false;
+            if (c.equals("1"))
+                return true;
+            if (c.equals("2"))
+                return false;
             System.out.println("Enter 1 or 2.");
         }
     }
@@ -448,18 +518,22 @@ public class Main {
         System.out.println("\n--------------------------------------------------");
         System.out.println("Room " + room.getRoomNumber() + ": " + room.getName());
         System.out.println(room.getDescription());
-        if (room.isVisited()) System.out.println("[Visited]");
+        if (room.isVisited())
+            System.out.println("[Visited]");
         room.markVisited();
 
         if (room.hasItems()) {
-            System.out.println("Items: " + room.getItems().stream().map(Item::getName).reduce((a, b) -> a + ", " + b).orElse(""));
+            System.out.println(
+                    "Items: " + room.getItems().stream().map(Item::getName).reduce((a, b) -> a + ", " + b).orElse(""));
         }
 
         Monster m = Monster.findActiveByRoomNumber(monsters, room.getRoomNumber());
-        if (m != null) System.out.println("[WARNING: " + m.getName() + " is here!]");
+        if (m != null)
+            System.out.println("[WARNING: " + m.getName() + " is here!]");
 
         Puzzle p = Puzzle.findByRoomNumber(puzzles, room.getRoomNumber());
-        if (p != null && !p.isSolved()) System.out.println("[There is a puzzle here. Type SOLVE to attempt it.]");
+        if (p != null && !p.isSolved())
+            System.out.println("[There is a puzzle here. Type SOLVE to attempt it.]");
 
         System.out.print("Exits: ");
         System.out.println(room.getExits().isEmpty() ? "None" : String.join(", ", room.getExits().keySet()));
@@ -506,29 +580,33 @@ public class Main {
     // Optional lock line: LOCK|roomNumber|requiredItemName
     private static boolean loadRooms(String fileName, Map<Integer, Room> rooms) {
         File f = new File(fileName);
-        if (!f.exists()) return false;
+        if (!f.exists())
+            return false;
 
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
             while ((line = br.readLine()) != null) {
                 line = line.trim();
-                if (line.isEmpty() || line.startsWith("#")) continue;
+                if (line.isEmpty() || line.startsWith("#"))
+                    continue;
 
                 String[] parts = line.split("\\|", -1);
 
                 if (parts[0].trim().equalsIgnoreCase("LOCK")) {
                     if (parts.length >= 3) {
                         Room room = rooms.get(Integer.parseInt(parts[1].trim()));
-                        if (room != null) room.setLocked(parts[2].trim());
+                        if (room != null)
+                            room.setLocked(parts[2].trim());
                     }
                     continue;
                 }
 
-                if (parts.length < 7) continue;
+                if (parts.length < 7)
+                    continue;
 
-                int    number = Integer.parseInt(parts[0].trim());
-                String name   = parts[1].trim();
-                String desc   = parts[2].trim();
+                int number = Integer.parseInt(parts[0].trim());
+                String name = parts[1].trim();
+                String desc = parts[2].trim();
 
                 Room room = new Room(number, name, desc);
                 room.addExit("N", Integer.parseInt(parts[3].trim()));
@@ -547,37 +625,47 @@ public class Main {
     // Format: name|description|type|attackBonus|healAmount|roomNumber
     private static void loadItems(String fileName, Map<Integer, Room> rooms, List<Item> allItems) {
         File f = new File(fileName);
-        if (!f.exists()) { System.out.println("Warning: " + fileName + " not found."); return; }
+        if (!f.exists()) {
+            System.out.println("Warning: " + fileName + " not found.");
+            return;
+        }
 
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
             while ((line = br.readLine()) != null) {
                 line = line.trim();
-                if (line.isEmpty() || line.startsWith("#")) continue;
+                if (line.isEmpty() || line.startsWith("#"))
+                    continue;
 
                 String[] parts = line.split("\\|", -1);
-                if (parts.length < 6) continue;
+                if (parts.length < 6)
+                    continue;
 
-                String name        = parts[0].trim();
+                String name = parts[0].trim();
                 String description = parts[1].trim();
-                String type        = parts[2].trim();
-                int    attackBonus = Integer.parseInt(parts[3].trim());
-                int    healAmount  = Integer.parseInt(parts[4].trim());
-                int    roomNumber  = Integer.parseInt(parts[5].trim());
+                String type = parts[2].trim();
+                int attackBonus = Integer.parseInt(parts[3].trim());
+                int healAmount = Integer.parseInt(parts[4].trim());
+                int roomNumber = Integer.parseInt(parts[5].trim());
 
                 Item item = new Item(name, description, type, attackBonus, healAmount, roomNumber);
                 allItems.add(item);
-                if (roomNumber > 0 && rooms.containsKey(roomNumber)) rooms.get(roomNumber).addItem(item);
+                if (roomNumber > 0 && rooms.containsKey(roomNumber))
+                    rooms.get(roomNumber).addItem(item);
             }
         } catch (IOException e) {
             System.out.println("Warning: Could not load items from " + fileName);
         }
     }
 
-    // Format: roomNumber|name|description|correctAnswer|successMessage|rewardItemName|allowedAttempts
+    // Format:
+    // roomNumber|name|description|correctAnswer|successMessage|rewardItemName|allowedAttempts
     private static Puzzle[] loadPuzzles(String fileName) {
         File f = new File(fileName);
-        if (!f.exists()) { System.out.println("Warning: " + fileName + " not found."); return new Puzzle[0]; }
+        if (!f.exists()) {
+            System.out.println("Warning: " + fileName + " not found.");
+            return new Puzzle[0];
+        }
 
         Map<Integer, Puzzle> puzzleMap = new HashMap<>();
 
@@ -585,20 +673,23 @@ public class Main {
             String line;
             while ((line = br.readLine()) != null) {
                 line = line.trim();
-                if (line.isEmpty() || line.startsWith("#")) continue;
+                if (line.isEmpty() || line.startsWith("#"))
+                    continue;
 
                 String[] parts = line.split("\\|", -1);
-                if (parts.length < 7) continue;
+                if (parts.length < 7)
+                    continue;
 
-                int    roomNumber  = Integer.parseInt(parts[0].trim());
-                String name        = parts[1].trim();
+                int roomNumber = Integer.parseInt(parts[0].trim());
+                String name = parts[1].trim();
                 String description = parts[2].trim();
-                String answer      = parts[3].trim();
-                String successMsg  = parts[4].trim();
-                String rewardItem  = parts[5].trim();
-                int    attempts    = Integer.parseInt(parts[6].trim());
+                String answer = parts[3].trim();
+                String successMsg = parts[4].trim();
+                String rewardItem = parts[5].trim();
+                int attempts = Integer.parseInt(parts[6].trim());
 
-                puzzleMap.put(roomNumber, new Puzzle(name, description, answer, successMsg, rewardItem, attempts, roomNumber));
+                puzzleMap.put(roomNumber,
+                        new Puzzle(name, description, answer, successMsg, rewardItem, attempts, roomNumber));
             }
         } catch (IOException e) {
             System.out.println("Warning: Could not load puzzles from " + fileName);
@@ -608,10 +699,14 @@ public class Main {
         return puzzleMap.values().toArray(Puzzle[]::new);
     }
 
-    // Format: roomNumber|name|description|health|attackDamage|threshold|dropItemName
+    // Format:
+    // roomNumber|name|description|health|attackDamage|threshold|dropItemName
     private static Monster[] loadMonsters(String fileName) {
         File f = new File(fileName);
-        if (!f.exists()) { System.out.println("Warning: " + fileName + " not found."); return new Monster[0]; }
+        if (!f.exists()) {
+            System.out.println("Warning: " + fileName + " not found.");
+            return new Monster[0];
+        }
 
         List<Monster> list = new ArrayList<>();
 
@@ -619,18 +714,20 @@ public class Main {
             String line;
             while ((line = br.readLine()) != null) {
                 line = line.trim();
-                if (line.isEmpty() || line.startsWith("#")) continue;
+                if (line.isEmpty() || line.startsWith("#"))
+                    continue;
 
                 String[] parts = line.split("\\|", -1);
-                if (parts.length < 7) continue;
+                if (parts.length < 7)
+                    continue;
 
-                int    roomNumber = Integer.parseInt(parts[0].trim());
-                String name       = parts[1].trim();
-                String desc       = parts[2].trim();
-                int    health     = Integer.parseInt(parts[3].trim());
-                int    attack     = Integer.parseInt(parts[4].trim());
-                double threshold  = Double.parseDouble(parts[5].trim());
-                String dropItem   = parts[6].trim();
+                int roomNumber = Integer.parseInt(parts[0].trim());
+                String name = parts[1].trim();
+                String desc = parts[2].trim();
+                int health = Integer.parseInt(parts[3].trim());
+                int attack = Integer.parseInt(parts[4].trim());
+                double threshold = Double.parseDouble(parts[5].trim());
+                String dropItem = parts[6].trim();
 
                 list.add(new Monster(name, desc, health, attack, threshold, dropItem, roomNumber));
             }
