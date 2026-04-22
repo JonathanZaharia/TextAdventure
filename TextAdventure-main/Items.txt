@@ -1,0 +1,21 @@
+n# Format: name|description|type|attackBonus|healAmount|roomNumber
+# roomNumber 0 = not placed in a room (granted via puzzle reward or monster drop)
+# Keep only WEAPON, CONSUMABLE, and KEY for compatibility with the current code.
+# R20 Key is included to support the intended final-room progression from the design docs.
+
+# Weapons (dropped by monsters or granted by puzzle reward)
+Rusted Knife|A stained kitchen knife recovered from the mansion. Light, fast, and still sharp enough to fight with.|WEAPON|3|0|0
+Broken Sword|A cracked ceremonial sword pulled from the mansion's shadows. Damaged, but still dangerous in close combat.|WEAPON|5|0|0
+Heavy Axe|A brutal two-handed axe with a worn handle and a heavy iron head built for powerful strikes.|WEAPON|7|0|0
+Shadow Blade|A dark blade humming with unnatural energy, as if the mansion itself forged it for the final climb.|WEAPON|9|0|0
+
+# Consumables (dropped by monsters or granted by puzzle reward)
+Med Kit|A compact medical kit stocked with bandages and antiseptic supplies. Restores a small amount of health.|CONSUMABLE|0|5|0
+
+# Keys and progression items (granted by puzzle rewards)
+Brass Key|A small brass key with worn markings. It unlocks the Library.|KEY|0|0|0
+StairA Key|A heavy iron key labeled with the letter A. It unlocks Stair A Hall.|KEY|0|0|0
+StairB Key|A cold metal key marked with the letter B. It unlocks Stair B Hall.|KEY|0|0|0
+R19 Key|A stamped case key tied to the Evidence Archive and the mansion's final records.|KEY|0|0|0
+R20 Key|A final chamber key meant for the mansion's last locked room and the end of the investigation.|KEY|0|0|0
+Observatory Access Card|A plastic access card with a magnetic strip, preserved here as a key-type item for compatibility with the current puzzle setup.|KEY|0|0|0
