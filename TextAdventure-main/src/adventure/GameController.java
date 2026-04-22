@@ -337,10 +337,35 @@ public class GameController {
     // File loaders
     // -------------------------------------------------------------------------
 
+    private static File resolveDataFile(String fileName) {
+        File directFile = new File(fileName);
+        if (directFile.exists())
+            return directFile;
+
+        File projectFile = new File("TextAdventure-main", fileName);
+        if (projectFile.exists())
+            return projectFile;
+
+        File current = new File(System.getProperty("user.dir"));
+        while (current != null) {
+            File candidate = new File(current, fileName);
+            if (candidate.exists())
+                return candidate;
+
+            File nestedProjectFile = new File(current, "TextAdventure-main" + File.separator + fileName);
+            if (nestedProjectFile.exists())
+                return nestedProjectFile;
+
+            current = current.getParentFile();
+        }
+
+        return directFile;
+    }
+
     // Format: roomNumber|name|description|north|east|south|west
     // Optional lock line: LOCK|roomNumber|requiredItemName
     private static boolean loadRooms(String fileName, Map<Integer, Room> rooms) {
-        File f = new File(fileName);
+        File f = resolveDataFile(fileName);
         if (!f.exists())
             return false;
 
@@ -355,9 +380,13 @@ public class GameController {
 
                 if (parts[0].trim().equalsIgnoreCase("LOCK")) {
                     if (parts.length >= 3) {
-                        Room room = rooms.get(Integer.parseInt(parts[1].trim()));
-                        if (room != null)
-                            room.setLocked(parts[2].trim());
+                        try {
+                            Room room = rooms.get(Integer.parseInt(parts[1].trim()));
+                            if (room != null)
+                                room.setLocked(parts[2].trim());
+                        } catch (NumberFormatException e) {
+                            // Ignore malformed lock rows.
+                        }
                     }
                     continue;
                 }
@@ -365,16 +394,20 @@ public class GameController {
                 if (parts.length < 7)
                     continue;
 
-                int number = Integer.parseInt(parts[0].trim());
-                String name = parts[1].trim();
-                String desc = parts[2].trim();
+                try {
+                    int number = Integer.parseInt(parts[0].trim());
+                    String name = parts[1].trim();
+                    String desc = parts[2].trim();
 
-                Room room = new Room(number, name, desc);
-                room.addExit("N", Integer.parseInt(parts[3].trim()));
-                room.addExit("E", Integer.parseInt(parts[4].trim()));
-                room.addExit("S", Integer.parseInt(parts[5].trim()));
-                room.addExit("W", Integer.parseInt(parts[6].trim()));
-                rooms.put(number, room);
+                    Room room = new Room(number, name, desc);
+                    room.addExit("N", Integer.parseInt(parts[3].trim()));
+                    room.addExit("E", Integer.parseInt(parts[4].trim()));
+                    room.addExit("S", Integer.parseInt(parts[5].trim()));
+                    room.addExit("W", Integer.parseInt(parts[6].trim()));
+                    rooms.put(number, room);
+                } catch (NumberFormatException e) {
+                    // Ignore malformed room rows.
+                }
             }
         } catch (IOException e) {
             return false;
@@ -385,7 +418,7 @@ public class GameController {
 
     // Format: name|description|type|attackBonus|healAmount|roomNumber
     private static void loadItems(String fileName, Map<Integer, Room> rooms, List<Item> allItems) {
-        File f = new File(fileName);
+        File f = resolveDataFile(fileName);
         if (!f.exists()) {
             GameView.printLine("Warning: " + fileName + " not found.");
             return;
@@ -402,17 +435,21 @@ public class GameController {
                 if (parts.length < 6)
                     continue;
 
-                String name = parts[0].trim();
-                String description = parts[1].trim();
-                String type = parts[2].trim();
-                int attackBonus = Integer.parseInt(parts[3].trim());
-                int healAmount = Integer.parseInt(parts[4].trim());
-                int roomNumber = Integer.parseInt(parts[5].trim());
+                try {
+                    String name = parts[0].trim();
+                    String description = parts[1].trim();
+                    String type = parts[2].trim();
+                    int attackBonus = Integer.parseInt(parts[3].trim());
+                    int healAmount = Integer.parseInt(parts[4].trim());
+                    int roomNumber = Integer.parseInt(parts[5].trim());
 
-                Item item = new Item(name, description, type, attackBonus, healAmount, roomNumber);
-                allItems.add(item);
-                if (roomNumber > 0 && rooms.containsKey(roomNumber))
-                    rooms.get(roomNumber).addItem(item);
+                    Item item = new Item(name, description, type, attackBonus, healAmount, roomNumber);
+                    allItems.add(item);
+                    if (roomNumber > 0 && rooms.containsKey(roomNumber))
+                        rooms.get(roomNumber).addItem(item);
+                } catch (NumberFormatException e) {
+                    // Ignore malformed item rows.
+                }
             }
         } catch (IOException e) {
             GameView.printLine("Warning: Could not load items from " + fileName);
@@ -422,7 +459,7 @@ public class GameController {
     // Format:
     // roomNumber|name|description|correctAnswer|successMessage|rewardItemName|allowedAttempts
     private static Puzzle[] loadPuzzles(String fileName) {
-        File f = new File(fileName);
+        File f = resolveDataFile(fileName);
         if (!f.exists()) {
             GameView.printLine("Warning: " + fileName + " not found.");
             return new Puzzle[0];
@@ -441,16 +478,20 @@ public class GameController {
                 if (parts.length < 7)
                     continue;
 
-                int roomNumber = Integer.parseInt(parts[0].trim());
-                String name = parts[1].trim();
-                String description = parts[2].trim();
-                String answer = parts[3].trim();
-                String successMsg = parts[4].trim();
-                String rewardItem = parts[5].trim();
-                int attempts = Integer.parseInt(parts[6].trim());
+                try {
+                    int roomNumber = Integer.parseInt(parts[0].trim());
+                    String name = parts[1].trim();
+                    String description = parts[2].trim();
+                    String answer = parts[3].trim();
+                    String successMsg = parts[4].trim();
+                    String rewardItem = parts[5].trim();
+                    int attempts = Integer.parseInt(parts[6].trim());
 
-                puzzleMap.put(roomNumber,
-                        new Puzzle(name, description, answer, successMsg, rewardItem, attempts, roomNumber));
+                    puzzleMap.put(roomNumber,
+                            new Puzzle(name, description, answer, successMsg, rewardItem, attempts, roomNumber));
+                } catch (NumberFormatException e) {
+                    // Ignore malformed puzzle rows.
+                }
             }
         } catch (IOException e) {
             GameView.printLine("Warning: Could not load puzzles from " + fileName);
@@ -463,7 +504,7 @@ public class GameController {
     // Format:
     // roomNumber|name|description|health|attackDamage|threshold|dropItemName
     private static Monster[] loadMonsters(String fileName) {
-        File f = new File(fileName);
+        File f = resolveDataFile(fileName);
         if (!f.exists()) {
             GameView.printLine("Warning: " + fileName + " not found.");
             return new Monster[0];
@@ -482,15 +523,19 @@ public class GameController {
                 if (parts.length < 7)
                     continue;
 
-                int roomNumber = Integer.parseInt(parts[0].trim());
-                String name = parts[1].trim();
-                String desc = parts[2].trim();
-                int health = Integer.parseInt(parts[3].trim());
-                int attack = Integer.parseInt(parts[4].trim());
-                double threshold = Double.parseDouble(parts[5].trim());
-                String dropItem = parts[6].trim();
+                try {
+                    int roomNumber = Integer.parseInt(parts[0].trim());
+                    String name = parts[1].trim();
+                    String desc = parts[2].trim();
+                    int health = Integer.parseInt(parts[3].trim());
+                    int attack = Integer.parseInt(parts[4].trim());
+                    double threshold = Double.parseDouble(parts[5].trim());
+                    String dropItem = parts[6].trim();
 
-                list.add(new Monster(name, desc, health, attack, threshold, dropItem, roomNumber));
+                    list.add(new Monster(name, desc, health, attack, threshold, dropItem, roomNumber));
+                } catch (NumberFormatException e) {
+                    // Ignore malformed monster rows.
+                }
             }
         } catch (IOException e) {
             GameView.printLine("Warning: Could not load monsters from " + fileName);
