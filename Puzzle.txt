@@ -6,5 +6,5 @@
 10|Reflection Word Puzzle|Enter the truth revealed in the reflection. (Hint: examine the mirror in the Master Bedroom.)|Victory|The box opens smoothly. No rust. No hesitation.|Observatory Access Card|5
 12|Roman Numeral Combination|Enter the 3-number sequence for the safe. Format: ##-##-## (Hint: examine the medicine cabinet in the Bathroom.)|12-1-4|The safe opens immediately, as if recently serviced.|StairB Key|5
 16|The Victim's Order|Arrange the portraits in chronological order. Enter the years separated by spaces.|1895 1898 1900 1902|A faint click echoes. The display case unlocks.|Shadow Blade|5
-18|Select the Truth|Select the correct statement from the black book. Enter the statement number.|3|The truth resonates. A hidden door clicks open.|R19 Key|5
-19|Final Statement|The typewriter waits. Enter the 4-digit case number.|2134|The typewriter prints: CASE CLOSED.|R19 Key|5
+18|Select the Truth|Select the correct statement from the black book. Enter the statement number.|3|The truth resonates. A hidden mechanism activates.|R19 Key|5
+19|Final Statement|The typewriter waits. Enter the 4-digit case number.|2134|The typewriter prints: CASE CLOSED.|R20 Key|5
