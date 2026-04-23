@@ -26,10 +26,10 @@ LOCK|14|StairB Key
 
 # Floor 3
 15|The Surveillance Hall|A long corridor lined with framed portraits of previous detectives. The dust here is thinner than below.|20|16|14|0
-16|The Gallery Hall|Four large portraits hang along the right wall, each slightly crooked. A locked glass display case stands across from them.|0|17|0|15
+16|The Gallery Hall|Four large portraits hang along the right wall, each slightly crooked. A locked glass display case stands across from them.|17|0|0|15
 17|The Marionette Gallery|Life-sized mannequins dressed as detectives hang suspended by wires. One resembles you.|0|0|16|18
 18|The Reflection Chamber|A circular chamber lined entirely with mirrors. A pedestal holds a black book titled: Case File Blackwood.|0|17|0|19
 19|The Evidence Archive|A typewriter sits center stage, its ribbon fresh. Filing drawers filled with case folders line the walls.|0|18|0|20
-20|The Blackwood Conservatory|Moonlight pours through tall glass panes. An elegant figure stands in the center with her back to you, perfectly still.|0|0|15|19
+20|The Blackwood Conservatory|Moonlight pours through tall glass panes. An elegant figure stands in the center with her back to you, perfectly still.|0|19|15|0
 
 LOCK|20|R19 Key
