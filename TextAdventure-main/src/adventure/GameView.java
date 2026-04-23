@@ -2,8 +2,19 @@ package adventure;
 
 public class GameView {
 
+    private static final int MAX_LINE_LENGTH = 60;
+    private static final String DIVIDER = "============================================================";
+
     public static void printLine(String message) {
-        System.out.println(message);
+        if (message == null) {
+            System.out.println();
+            return;
+        }
+
+        String[] lines = message.split("\\r?\\n", -1);
+        for (String line : lines) {
+            printWrappedLine(line);
+        }
     }
 
     public static void print(String message) {
@@ -11,96 +22,170 @@ public class GameView {
     }
 
     public static void printWelcome() {
-        System.out.println("Welcome to Mrs. Blackwood's Mansion!");
-        System.out.println("Type HELP for commands.\n");
+        System.out.println("============================================================");
+        System.out.println("             THE BLACKWOOD MANSION INVESTIGATION");
+        System.out.println("============================================================");
+        System.out.println();
+        System.out.println("The year is 1923. You are a private detective summoned to");
+        System.out.println("Blackwood Mansion after the sudden disappearance of three");
+        System.out.println("guests - and the silence of Mrs. Eleanor Blackwood.");
+        System.out.println();
+        System.out.println("The police closed the case. You didn't.");
+        System.out.println();
+        System.out.println("Your goal: reach the top floor, uncover the truth, and");
+        System.out.println("confront whatever is waiting in the Conservatory.");
+        System.out.println();
+        System.out.println("Type HELP for commands. Type GOAL to view your objective.");
+        System.out.println();
     }
 
-    public static void displayRoom(Room room, Puzzle[] puzzles, Monster[] monsters) {
-        System.out.println("\n--------------------------------------------------");
-        System.out.println("Room " + room.getRoomNumber() + ": " + room.getName());
-        System.out.println(room.getDescription());
+    public static void displayRoomHeader(Room room) {
+        printLine(DIVIDER + "\n");
+        printLine("Room " + room.getRoomNumber() + ": " + room.getName());
+        printLine("");
+        printLine(room.getDescription());
         if (room.isVisited())
-            System.out.println("[Visited]");
+            printLine("[Visited]");
 
         if (room.hasItems()) {
-            System.out.println(
+            printLine(
                     "Items: " + room.getItems().stream().map(Item::getName).reduce((a, b) -> a + ", " + b).orElse(""));
         }
+    }
 
-        Monster m = Monster.findActiveByRoomNumber(monsters, room.getRoomNumber());
-        if (m != null)
-            System.out.println("[WARNING: " + m.getName() + " is here!]");
-
-        Puzzle p = Puzzle.findByRoomNumber(puzzles, room.getRoomNumber());
-        if (p != null && !p.isSolved())
-            System.out.println("[There is a puzzle here. Type SOLVE to attempt it.]");
-
-        System.out.print("Exits: ");
-        System.out.println(room.getExits().isEmpty() ? "None" : String.join(", ", room.getExits().keySet()));
+    public static void displayRoomFooter(Room room) {
+        String exits = room.getExits().isEmpty()
+                ? "None"
+                : room.getExits().keySet().stream()
+                        .map(dir -> switch (dir.toUpperCase()) {
+                            case "N" -> "North";
+                            case "E" -> "East";
+                            case "S" -> "South";
+                            case "W" -> "West";
+                            default -> dir;
+                        })
+                        .reduce((a, b) -> a + ", " + b)
+                        .orElse("None");
+        printLine("Available Exits: " + exits);
+        printLine("\nMove with N/E/S/W. Type HELP for more.");
     }
 
     public static void displayInventory(Player player) {
-        System.out.println("\n--- Inventory ---");
+        printLine("");
+        printLine("--- Inventory ---");
         if (player.isInventoryEmpty()) {
-            System.out.println("  (empty)");
+            printLine("  (empty)");
         } else {
             for (Item item : player.getInventory()) {
                 String tag = (player.getEquippedItem() == item) ? " [EQUIPPED]" : "";
-                System.out.println("  - " + item.getName() + " (" + item.getType() + ")" + tag);
+                printLine("  - " + item.getName() + " (" + item.getType() + ")" + tag);
             }
         }
-        System.out.println("Health: " + player.getCurrentHealth() + "/" + player.getMaxHealth()
+        printLine("Health: " + player.getCurrentHealth() + "/" + player.getMaxHealth()
                 + "  |  Attack: " + player.getAttackDamage());
     }
 
     public static void printHelp() {
-        System.out.println("\n--- Commands ---");
-        System.out.println("  N/E/S/W           Move");
-        System.out.println("  LOOK / EXPLORE    List items in room");
-        System.out.println("  TAKE [item]       Pick up item");
-        System.out.println("  DROP [item]       Drop item");
-        System.out.println("  INSPECT [item]    Inspect item or monster");
-        System.out.println("  EQUIP [item]      Equip a weapon");
-        System.out.println("  UNEQUIP           Unequip weapon");
-        System.out.println("  HEAL [item]       Use a consumable");
-        System.out.println("  ATTACK            Attack monster in room");
-        System.out.println("  IGNORE            Ignore monster in room");
-        System.out.println("  SOLVE             Attempt room puzzle");
-        System.out.println("  INVENTORY / INV   View inventory");
-        System.out.println("  HEALTH / HP       View health");
-        System.out.println("  HELP              Show commands");
-        System.out.println("  QUIT / Q          Quit");
+        printLine("");
+        printLine("--- Commands ---");
+        printLine("  Move: N/E/S/W");
+        printLine("  Look: LOOK or EXPLORE");
+        printLine("  Take: TAKE <item>");
+        printLine("  Drop: DROP <item>");
+        printLine("  Inspect: INSPECT <item>");
+        printLine("  Equip: EQUIP <item>");
+        printLine("  Unequip: UNEQUIP");
+        printLine("  Heal: HEAL <item>");
+        printLine("  Attack: ATTACK");
+        printLine("  Ignore: IGNORE");
+        printLine("  Solve: SOLVE");
+        printLine("  Exits: EXITS");
+        printLine("  Inventory: INVENTORY or INV");
+        printLine("  Health: HEALTH or HP");
+        printLine("  Help: HELP");
+        printLine("  Quit: QUIT or Q");
     }
 
     public static void handleInspect(Player player, Room room, Monster[] monsters, String target) {
         // Check room items first
         Item roomItem = room.findItem(target);
         if (roomItem != null) {
-            System.out.println(roomItem.getName() + ": " + roomItem.getDescription());
+            printLine(roomItem.getName() + ": " + roomItem.getDescription());
             return;
         }
 
         // Check inventory items
         Item invItem = player.getItemByName(target);
         if (invItem != null) {
-            System.out.println(invItem.getName() + ": " + invItem.getDescription());
+            printLine(invItem.getName() + ": " + invItem.getDescription());
             return;
         }
 
         // Check for active monster in room
         Monster monster = Monster.findActiveByRoomNumber(monsters, room.getRoomNumber());
         if (monster != null && monster.getName().equalsIgnoreCase(target)) {
-            System.out.println(monster.getName() + ": " + monster.getDescription());
-            System.out.println("Attack: " + monster.getAttackDamage() + " | HP: " + monster.getCurrentHealth() + "/"
+            printLine(monster.getName() + ": " + monster.getDescription());
+            printLine("Attack: " + monster.getAttackDamage() + " | HP: " + monster.getCurrentHealth() + "/"
                     + monster.getMaxHealth());
             return;
         }
 
-        System.out.println("There is nothing like that to inspect here.");
+        printLine("There is nothing like that to inspect here.");
     }
 
     public static void showGameOverMenu() {
-        System.out.println("\n=== GAME OVER ===");
-        System.out.println("1. Start new game   2. Exit");
+        printLine("");
+        printLine("=== GAME OVER ===");
+        printLine("1. Start new game   2. Exit");
+    }
+
+    private static void printWrappedLine(String line) {
+        if (line == null || line.isEmpty()) {
+            System.out.println();
+            return;
+        }
+
+        String remaining = line;
+        while (!remaining.isEmpty()) {
+            if (remaining.length() <= MAX_LINE_LENGTH) {
+                System.out.println(remaining);
+                return;
+            }
+
+            int breakPoint = findWrapPoint(remaining, MAX_LINE_LENGTH);
+            if (breakPoint <= 0) {
+                System.out.println(remaining.substring(0, MAX_LINE_LENGTH));
+                remaining = remaining.substring(MAX_LINE_LENGTH);
+            } else {
+                System.out.println(trimTrailingWhitespace(remaining.substring(0, breakPoint)));
+                remaining = trimLeadingWhitespace(remaining.substring(breakPoint));
+            }
+        }
+    }
+
+    private static int findWrapPoint(String text, int maxLength) {
+        int limit = Math.min(text.length(), maxLength);
+        for (int i = limit - 1; i >= 0; i--) {
+            if (Character.isWhitespace(text.charAt(i))) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private static String trimLeadingWhitespace(String text) {
+        int index = 0;
+        while (index < text.length() && Character.isWhitespace(text.charAt(index))) {
+            index++;
+        }
+        return text.substring(index);
+    }
+
+    private static String trimTrailingWhitespace(String text) {
+        int index = text.length();
+        while (index > 0 && Character.isWhitespace(text.charAt(index - 1))) {
+            index--;
+        }
+        return text.substring(0, index);
     }
 }

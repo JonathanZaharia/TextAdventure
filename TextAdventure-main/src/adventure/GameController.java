@@ -61,6 +61,8 @@ public class GameController {
                 previousRoom = currentRoomNumber;
 
                 if (justEnteredRoom) {
+                    GameView.displayRoomHeader(current);
+
                     // Monster encounter on entry and reset
                     Monster m = Monster.findByRoomNumber(monsters, currentRoomNumber);
                     if (m != null && m.isIgnored()) {
@@ -93,12 +95,12 @@ public class GameController {
                             roomPuzzle.setFailedForThisVisit();
                     }
 
-                    GameView.displayRoom(current, puzzles, monsters);
+                    GameView.displayRoomFooter(current);
                     current.markVisited();
                     justEnteredRoom = false;
                 }
 
-                GameView.print("\nCommand: ");
+                GameView.print("\nChoice: ");
                 String inputLine = input.nextLine().trim();
                 if (inputLine.isEmpty())
                     continue;
@@ -234,6 +236,8 @@ public class GameController {
                         }
                     }
 
+                    case "EXITS" -> GameView.displayRoomFooter(current);
+
                     case "INVENTORY", "INV", "I" -> GameView.displayInventory(player);
 
                     case "HEALTH", "HP" ->
@@ -256,10 +260,10 @@ public class GameController {
             Scanner input) {
         GameView.printLine("\n! A " + monster.getName() + " is here !");
         GameView.printLine(monster.getDescription());
-        GameView.printLine("Type ATTACK to fight or IGNORE to back away.");
+        GameView.printLine("\nType ATTACK to fight or IGNORE to back away.");
 
         while (true) {
-            GameView.print("Choice: ");
+            GameView.print("\nChoice: ");
             String choice = input.nextLine().trim().toUpperCase();
 
             if (choice.equals("ATTACK")) {
@@ -268,11 +272,11 @@ public class GameController {
 
             if (choice.equals("IGNORE")) {
                 monster.setIgnored();
-                GameView.printLine("You back away. The " + monster.getName() + " will not appear again.");
+                GameView.printLine("\nYou back away. The " + monster.getName() + " will not appear again.\n");
                 return true;
             }
 
-            GameView.printLine("Type ATTACK or IGNORE.");
+            GameView.printLine("\nType ATTACK to fight or IGNORE to back away.");
         }
     }
 

@@ -140,8 +140,8 @@ public class Puzzle {
 
         GameView.printLine("\n--- Puzzle: " + name + " ---");
         GameView.printLine(description);
-        GameView.printLine("Attempts remaining: " + remainingAttempts);
-        GameView.print("Answer: ");
+        GameView.printLine("\nAttempts remaining: " + remainingAttempts);
+        GameView.print("\nAnswer: ");
 
         String answer = input.nextLine().trim();
         if (isBlankAnswer(answer)) {
