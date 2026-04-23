@@ -61,7 +61,11 @@ public class GameController {
                 previousRoom = currentRoomNumber;
 
                 if (justEnteredRoom) {
-                    // Monster encounter on entry
+                    // Monster encounter on entry and reset
+                    Monster m = Monster.findByRoomNumber(monsters, currentRoomNumber);
+                    if (m != null && m.isIgnored()) {
+                        m.reset();
+                    }
                     Monster monster = Monster.findActiveByRoomNumber(monsters, currentRoomNumber);
                     if (monster != null) {
                         boolean survived = handleMonsterEncounter(monster, allItems, player, current, input);
@@ -303,12 +307,33 @@ public class GameController {
                         return true;
                     }
 
-                    monster.monsterAttack(player);
+                    int monsterDamage = monster.monsterAttack();
+                    player.takeDamage(monsterDamage);
+
+                    GameView.printLine(monster.getName() + " attacks for " + monsterDamage
+                            + (monsterDamage > monster.getAttackDamage() ? " (critical!)" : "")
+                            + ". Your HP: " + player.getCurrentHealth());
+
+                    if (player.isDead()) {
+                        GameView.printLine("You have been defeated...");
+                        return false;
+                    }
                 }
                 case "HEAL" -> {
                     player.consumeHealingItem(arg);
+
                     if (!player.isDead()) {
-                        monster.monsterAttack(player);
+                        int monsterDamage = monster.monsterAttack();
+                        player.takeDamage(monsterDamage);
+
+                        GameView.printLine(monster.getName() + " attacks for " + monsterDamage
+                                + (monsterDamage > monster.getAttackDamage() ? " (critical!)" : "")
+                                + ". Your HP: " + player.getCurrentHealth());
+
+                        if (player.isDead()) {
+                            GameView.printLine("You have been defeated...");
+                            return false;
+                        }
                     }
                 }
                 case "EQUIP" -> player.equipWeapon(arg);

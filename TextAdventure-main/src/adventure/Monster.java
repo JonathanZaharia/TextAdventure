@@ -17,7 +17,7 @@ public class Monster {
     private boolean ignored; // true if player chose to ignore this monster
 
     public Monster(String name, String description, int health, int attackDamage,
-            double threshold, String dropItemName, int roomNumber) {
+                   double threshold, String dropItemName, int roomNumber) {
         this.name = name;
         this.description = description;
         this.maxHealth = health;
@@ -98,16 +98,9 @@ public class Monster {
         return null;
     }
 
-    public void monsterAttack(Player player) {
+    public int monsterAttack() {
         double roll = new Random().nextDouble();
-        int damage = calculateAttackDamage(roll);
-        player.takeDamage(damage);
-        System.out.println(getName() + " attacks for " + damage
-                + (damage > getAttackDamage() ? " (critical!)" : "")
-                + ". Your HP: " + player.getCurrentHealth());
-        if (player.isDead()) {
-            System.out.println("You have been defeated...");
-        }
+        return calculateAttackDamage(roll);
     }
 
     public void dropLoot(List<Item> allItems, Room room) {
@@ -121,5 +114,18 @@ public class Monster {
                 return;
             }
         }
+    }
+    public void reset(){
+        this.currentHealth = maxHealth;
+        this.ignored = false;
+    }
+    public static Monster findByRoomNumber(Monster[] monsters, int roomNumber) {
+        if (monsters == null) return null;
+        for (Monster m : monsters) {
+            if (m.getRoomNumber() == roomNumber) {
+                return m;
+            }
+        }
+        return null;
     }
 }
