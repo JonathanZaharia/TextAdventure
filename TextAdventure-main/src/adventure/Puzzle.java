@@ -1,6 +1,7 @@
 package adventure;
 
 import java.util.List;
+import java.util.Scanner;
 
 public class Puzzle {
 
@@ -17,8 +18,8 @@ public class Puzzle {
     private boolean failedForThisVisit;
 
     public Puzzle(String name, String description, String correctAnswer,
-                  String successMessage, String rewardItemName,
-                  int allowedAttempts, int roomNumber) {
+            String successMessage, String rewardItemName,
+            int allowedAttempts, int roomNumber) {
         this.name = name != null ? name.trim() : "";
         this.description = description != null ? description.trim() : "";
         this.correctAnswer = correctAnswer != null ? correctAnswer.trim() : "";
@@ -118,6 +119,52 @@ public class Puzzle {
 
         if (!hasAttemptsRemaining()) {
             failedForThisVisit = true;
+        }
+
+        return false;
+    }
+
+    // Interactive puzzle flow used by the controller during room entry and SOLVE
+    // command.
+    public boolean attemptPuzzle(List<Item> allItems, Player player, Scanner input) {
+        if (solved) {
+            GameView.printLine("This puzzle has already been solved.");
+            return true;
+        }
+
+        if (!hasAttemptsRemaining()) {
+            failedForThisVisit = true;
+            GameView.printLine("No attempts remaining for this puzzle.");
+            return false;
+        }
+
+        GameView.printLine("\n--- Puzzle: " + name + " ---");
+        GameView.printLine(description);
+        GameView.printLine("Attempts remaining: " + remainingAttempts);
+        GameView.print("Answer: ");
+
+        String answer = input.nextLine().trim();
+        if (isBlankAnswer(answer)) {
+            GameView.printLine("No answer entered.");
+            return false;
+        }
+
+        boolean solvedNow = attemptSolve(answer);
+        if (solvedNow) {
+            GameView.printLine(successMessage.isEmpty() ? "Puzzle solved!" : successMessage);
+            Item reward = grantReward(player, allItems);
+            if (reward != null) {
+                GameView.printLine("You received: " + reward.getName());
+            }
+            return true;
+        }
+
+        GameView.printLine("Incorrect answer.");
+        if (hasAttemptsRemaining()) {
+            GameView.printLine("Attempts remaining: " + remainingAttempts);
+        } else {
+            failedForThisVisit = true;
+            GameView.printLine("You have no attempts remaining for this puzzle.");
         }
 
         return false;

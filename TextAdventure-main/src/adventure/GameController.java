@@ -13,7 +13,7 @@ import java.util.Scanner;
 public class GameController {
 
     private static final String ROOMS_FILE = "Rooms.txt";
-    private static final String ITEMS_FILE = "Items.txt";
+    private static final String ITEMS_FILE = "Item.txt";
     private static final String PUZZLE_FILE = "Puzzle.txt";
     private static final String MONSTERS_FILE = "Monsters.txt";
 
