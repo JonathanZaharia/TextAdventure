@@ -1,6 +1,5 @@
 package adventure;
 
-import java.util.List;
 import java.util.Random;
 
 public class Monster {
@@ -17,7 +16,7 @@ public class Monster {
     private boolean ignored; // true if player chose to ignore this monster
 
     public Monster(String name, String description, int health, int attackDamage,
-                   double threshold, String dropItemName, int roomNumber) {
+            double threshold, String dropItemName, int roomNumber) {
         this.name = name;
         this.description = description;
         this.maxHealth = health;
@@ -103,24 +102,14 @@ public class Monster {
         return calculateAttackDamage(roll);
     }
 
-    public void dropLoot(List<Item> allItems, Room room) {
-        if (!hasDropItem())
-            return;
-
-        for (Item item : allItems) {
-            if (item.getName().equalsIgnoreCase(getDropItemName())) {
-                room.addItem(item);
-                System.out.println(getName() + " dropped: " + item.getName() + ". Use TAKE to pick it up.");
-                return;
-            }
-        }
-    }
-    public void reset(){
+    public void reset() {
         this.currentHealth = maxHealth;
         this.ignored = false;
     }
+
     public static Monster findByRoomNumber(Monster[] monsters, int roomNumber) {
-        if (monsters == null) return null;
+        if (monsters == null)
+            return null;
         for (Monster m : monsters) {
             if (m.getRoomNumber() == roomNumber) {
                 return m;

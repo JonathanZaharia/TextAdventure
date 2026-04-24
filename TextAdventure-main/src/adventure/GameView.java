@@ -39,7 +39,7 @@ public class GameView {
         System.out.println("- Type HELP for a list of possible commands.");
         System.out.println("- Type OBJ to view your current objective.");
         System.out.println();
-        System.out.print("Press any key to enter the Blackwood Mansion ");
+        System.out.print("Press ENTER to step into the Blackwood Mansion:");
     }
 
     public static void printGoodLuck() {
@@ -175,6 +175,10 @@ public class GameView {
         printLine("1. Respawn   2. Quit Game");
         printLine("");
         printLine(DIVIDER);
+    }
+
+    public static void printMonsterDrop(String monsterName, String itemName) {
+        printLine(monsterName + " dropped: " + itemName + ". Use TAKE to pick it up.");
     }
 
     public static void printVictorySequence() {

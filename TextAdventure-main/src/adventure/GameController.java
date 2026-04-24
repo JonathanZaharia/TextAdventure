@@ -130,8 +130,13 @@ public class GameController {
                     // Puzzle check on entry
                     Puzzle roomPuzzle = Puzzle.findByRoomNumber(puzzles, currentRoomNumber);
                     if (roomPuzzle != null && !roomPuzzle.isSolved() && !roomPuzzle.isFailedForThisVisit()) {
-                        boolean solved = roomPuzzle.attemptPuzzle(allItems, player, input);
+                        GameView.printLine(roomPuzzle.getDescription());
+                        GameView.print("Your answer: ");
+                        String answer = input.nextLine().trim();
+                        boolean solved = roomPuzzle.attemptSolve(answer);
                         if (solved) {
+                            GameView.printLine(roomPuzzle.getSuccessMessage());
+                            roomPuzzle.grantReward(player, allItems);
                             if (currentRoomNumber == 6) {
                                 currentObjective = advanceObjectiveTo(2, currentObjective);
                             } else if (currentRoomNumber == 12) {
@@ -140,7 +145,11 @@ public class GameController {
                                 currentObjective = advanceObjectiveTo(6, currentObjective);
                             }
                         } else {
-                            roomPuzzle.setFailedForThisVisit();
+                            GameView.printLine(
+                                    "That's not correct. Attempts remaining: " + roomPuzzle.getRemainingAttempts());
+                            if (!roomPuzzle.hasAttemptsRemaining()) {
+                                roomPuzzle.setFailedForThisVisit();
+                            }
                         }
                     }
 
@@ -281,9 +290,20 @@ public class GameController {
                         } else if (roomPuzzle.isFailedForThisVisit()) {
                             GameView.printLine("You have no attempts remaining for this puzzle right now.");
                         } else {
-                            boolean solved = roomPuzzle.attemptPuzzle(allItems, player, input);
-                            if (!solved)
-                                roomPuzzle.setFailedForThisVisit();
+                            GameView.printLine(roomPuzzle.getDescription());
+                            GameView.print("Your answer: ");
+                            String answer = input.nextLine().trim();
+                            boolean solved = roomPuzzle.attemptSolve(answer);
+                            if (solved) {
+                                GameView.printLine(roomPuzzle.getSuccessMessage());
+                                roomPuzzle.grantReward(player, allItems);
+                            } else {
+                                GameView.printLine(
+                                        "That's not correct. Attempts remaining: " + roomPuzzle.getRemainingAttempts());
+                                if (!roomPuzzle.hasAttemptsRemaining()) {
+                                    roomPuzzle.setFailedForThisVisit();
+                                }
+                            }
                         }
                     }
 
@@ -374,7 +394,7 @@ public class GameController {
 
                     if (monster.isDead()) {
                         GameView.printLine("You defeated the " + monster.getName() + "!");
-                        monster.dropLoot(allItems, room);
+                        dropMonsterLoot(monster, allItems, room);
                         return true;
                     }
 
@@ -430,6 +450,20 @@ public class GameController {
             if (choice.equals("2"))
                 return false;
             GameView.printLine("Enter 1 or 2.");
+        }
+    }
+
+    private static void dropMonsterLoot(Monster monster, List<Item> allItems, Room room) {
+        if (!monster.hasDropItem()) {
+            return;
+        }
+
+        for (Item item : allItems) {
+            if (item.getName().equalsIgnoreCase(monster.getDropItemName())) {
+                room.addItem(item);
+                GameView.printMonsterDrop(monster.getName(), item.getName());
+                return;
+            }
         }
     }
 
