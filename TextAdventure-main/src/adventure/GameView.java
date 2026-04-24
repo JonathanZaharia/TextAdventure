@@ -23,7 +23,7 @@ public class GameView {
 
     public static void printWelcome() {
         System.out.println("============================================================");
-        System.out.println("             THE BLACKWOOD MANSION INVESTIGATION");
+        System.out.println("             THE BLACKWOOD MANSION MYSTERY");
         System.out.println("============================================================");
         System.out.println();
         System.out.println("The year is 1923. You are a private detective summoned to");
@@ -39,7 +39,7 @@ public class GameView {
         System.out.println("- Type HELP for a list of possible commands.");
         System.out.println("- Type OBJ to view your current objective.");
         System.out.println();
-        System.out.print("Enter the Blackwood Mansion? ");
+        System.out.print("Press any key to enter the Blackwood Mansion ");
     }
 
     public static void printGoodLuck() {
