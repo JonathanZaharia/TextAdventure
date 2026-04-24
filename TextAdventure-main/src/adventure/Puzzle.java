@@ -1,7 +1,6 @@
 package adventure;
 
 import java.util.List;
-import java.util.Scanner;
 
 public class Puzzle {
 
@@ -9,7 +8,7 @@ public class Puzzle {
     private final String description;
     private final String correctAnswer;
     private final String successMessage;
-    private final String rewardItemName; // item granted on solve, empty if none
+    private final String rewardItemName;
     private final int allowedAttempts;
     private final int roomNumber;
 
@@ -18,15 +17,18 @@ public class Puzzle {
     private boolean failedForThisVisit;
 
     public Puzzle(String name, String description, String correctAnswer,
-            String successMessage, String rewardItemName,
-            int allowedAttempts, int roomNumber) {
+                  String successMessage, String rewardItemName,
+                  int allowedAttempts, int roomNumber) {
         this.name = name != null ? name.trim() : "";
         this.description = description != null ? description.trim() : "";
         this.correctAnswer = correctAnswer != null ? correctAnswer.trim() : "";
         this.successMessage = successMessage != null ? successMessage.trim() : "";
         this.rewardItemName = rewardItemName != null ? rewardItemName.trim() : "";
-        this.allowedAttempts = Math.max(1, allowedAttempts);
+
+        // Every puzzle gets 4 attempts
+        this.allowedAttempts = 4;
         this.remainingAttempts = this.allowedAttempts;
+
         this.roomNumber = roomNumber;
         this.solved = false;
         this.failedForThisVisit = false;
@@ -92,10 +94,20 @@ public class Puzzle {
         return answer == null || answer.trim().isEmpty();
     }
 
+    public boolean isCommandWord(String answer) {
+        if (answer == null) {
+            return false;
+        }
+
+        String input = answer.trim().toLowerCase();
+        return input.equals("ignore") || input.equals("solve") || input.equals("look");
+    }
+
     public boolean matchesAnswer(String answer) {
         if (isBlankAnswer(answer)) {
             return false;
         }
+
         return answer.trim().equalsIgnoreCase(correctAnswer);
     }
 
@@ -105,7 +117,8 @@ public class Puzzle {
             return false;
         }
 
-        if (isBlankAnswer(answer)) {
+        // Blank answers and command words should NOT count as attempts
+        if (isBlankAnswer(answer) || isCommandWord(answer)) {
             return false;
         }
 
@@ -124,61 +137,20 @@ public class Puzzle {
         return false;
     }
 
-    // Interactive puzzle flow used by the controller during room entry and SOLVE
-    // command.
-    public boolean attemptPuzzle(List<Item> allItems, Player player, Scanner input) {
-        if (solved) {
-            GameView.printLine("This puzzle has already been solved.");
-            return true;
-        }
-
-        if (!hasAttemptsRemaining()) {
-            failedForThisVisit = true;
-            GameView.printLine("No attempts remaining for this puzzle.");
-            return false;
-        }
-
-        GameView.printLine("");
-        GameView.printLine("! PUZZLE: " + name.toUpperCase() + " !");
-        GameView.printLine(description);
-        GameView.printLine("Attempts remaining: " + remainingAttempts);
-        GameView.print("\nAnswer: ");
-
-        String answer = input.nextLine().trim();
-        if (isBlankAnswer(answer)) {
-            GameView.printLine("No answer entered.");
-            return false;
-        }
-
-        boolean solvedNow = attemptSolve(answer);
-        if (solvedNow) {
-            GameView.printLine(successMessage.isEmpty() ? "Puzzle solved!" : successMessage);
-            Item reward = grantReward(player, allItems);
-            if (reward != null) {
-                GameView.printLine("You received: " + reward.getName());
-            }
-            return true;
-        }
-
-        GameView.printLine("Incorrect answer.");
-        if (hasAttemptsRemaining()) {
-            GameView.printLine("Attempts remaining: " + remainingAttempts);
-        } else {
-            failedForThisVisit = true;
-            GameView.printLine("You have no attempts remaining for this puzzle.");
-        }
-
-        return false;
-    }
-
     // Applies reward if puzzle has one and it exists in the item list
     public Item grantReward(Player player, List<Item> allItems) {
-        if (!hasItemReward() || player == null || allItems == null) {
+        if (!solved || !hasItemReward() || player == null || allItems == null) {
             return null;
         }
 
         for (Item item : allItems) {
             if (item != null && item.getName().equalsIgnoreCase(rewardItemName)) {
+
+                // Prevent adding the same reward multiple times
+                if (item.getCurrentLocation() == 0) {
+                    return null;
+                }
+
                 item.setCurrentLocation(0);
                 player.addItem(item);
                 return item;
