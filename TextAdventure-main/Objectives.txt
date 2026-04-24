@@ -1,22 +1,8 @@
-# Format: roomNumber|objective
-
-1|The monster lurking here is creepy but you need to focus. Head west to the Study to begin your investigation.
-2|The Library to the north is locked -- you need the Brass Key. Head south back to the Grand Foyer, then west into the Study to find it. If you have it, head north.
-3|Solve the drawer puzzle -- think about where knowledge sleeps. The reward unlocks the Library. Once solved, head east to the Grand Foyer and north to the Living Room.
-4|You unlocked the Library. Use LOOK to search the shelves, then head south back to the Living Room. Continue east through the Grand Foyer toward the Dining Room.
-5|The monster lurking here is creepy but you need to focus. You will need the StairA Key before heading north -- find it by solving the puzzle in the Kitchen west of Stair A Hall.
-6|Defeat the Pantry Ghoul, then solve the keypad puzzle to receive the StairA Key. Once you have it, head east to Stair A Hall.
-7|Use the StairA Key to enter. Defeat the Stair Guardian -- it drops the StairB Key which you will need on the second floor. Then head north to the Upper Landing.
-8|You are on the second floor. Defeat the Charred Scholar for a weapon. Explore all directions -- Master Bedroom to the north, Guest Bedroom to the east, Private Office to the west. Each room holds a clue or puzzle.
-9|Defeat the Shadow Beast -- it drops a weapon. Then type INSPECT mirror to examine the vanity. What you see reflected is the answer to the puzzle in the Guest Bedroom to the east of the Upper Landing.
-10|The locked box requires a single word -- it is the word you saw reflected in the Master Bedroom mirror. Solve it to receive the Observatory Access Card. Then explore the Bathroom to the north for another clue.
-11|Examine the medicine cabinet carefully. The dates on the prescription bottles form a 3-number sequence -- this is the combination to the safe in the Private Office. Head south to the Guest Bedroom, then west through the Upper Landing to use it.
-12|Enter the 3-number combination you found in the Bathroom medicine cabinet to open the safe and receive the StairB Key. Head north to the Balcony before moving on.
-13|Examine the telescope carefully. A note attached to it contains a 4-digit case number you will need at the very end of the investigation. Then head west to Stair B Hall.
-14|Use the StairB Key to unlock the staircase. Head north to the third and final floor.
-15|You are on the final floor. The Conservatory to the north is locked -- you need the R19 Key from deeper in the halls. Head east to the Gallery Hall.
-16|Four portraits hang on the wall. Check the plaques for dates and arrange them in chronological order to unlock the display case and receive a powerful weapon. Then head north.
-17|Defeat the Porcelain Doll blocking your path and head west to the Reflection Chamber.
-18|Read the three statements in the black book and select the one that is true. Solving this gives you the R19 Key to unlock the Conservatory. Head west to the Evidence Archive first.
-19|The typewriter needs the 4-digit case number you found on the telescope in the Balcony. Enter it to receive the R20 Key, then head west and use the R19 Key to unlock the Conservatory.
-20|You have made it to the Conservatory. Face Mrs. Blackwood and bring the investigation to its end.
+# Format: one objective per line, in progression order.
+Explore the mansion and find the Kitchen. Solve the puzzle there to get the key to the upper floors.
+You found the Kitchen. Solve the keypad puzzle to receive the StairA Key.
+You have the StairA Key. Find Stair A Hall and head upstairs.
+You are on the second floor. Find the Private Office and crack the safe to get the StairB Key.
+You have the StairB Key. Find the staircase and head up to the final floor.
+You are on the final floor. Find the Reflection Chamber and solve the puzzle to get the R19 Key.
+You have the R19 Key. Find the Conservatory and face what is waiting inside.

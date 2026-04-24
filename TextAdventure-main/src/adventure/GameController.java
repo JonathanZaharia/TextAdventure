@@ -35,7 +35,7 @@ public class GameController {
         loadItems(ITEMS_FILE, rooms, allItems);
         Puzzle[] puzzles = loadPuzzles(PUZZLE_FILE);
         Monster[] monsters = loadMonsters(MONSTERS_FILE);
-        Map<Integer, String> objectives = loadObjectives(OBJECTIVES_FILE);
+        String[] objectives = loadObjectives(OBJECTIVES_FILE);
 
         int startRoom = rooms.containsKey(PLAYER_START_ROOM)
                 ? PLAYER_START_ROOM
@@ -80,6 +80,7 @@ public class GameController {
             boolean running = true;
             boolean justEnteredRoom = true;
             int previousRoom = -1;
+            int currentObjective = 0;
 
             while (running) {
                 int currentRoomNumber = player.getCurrentRoomNumber();
@@ -95,6 +96,16 @@ public class GameController {
 
                 if (justEnteredRoom) {
                     GameView.displayRoomHeader(current);
+
+                    if (!current.isVisited()) {
+                        if (currentRoomNumber == 6) {
+                            currentObjective = advanceObjectiveTo(1, currentObjective);
+                        } else if (currentRoomNumber == 8) {
+                            currentObjective = advanceObjectiveTo(3, currentObjective);
+                        } else if (currentRoomNumber == 15) {
+                            currentObjective = advanceObjectiveTo(5, currentObjective);
+                        }
+                    }
 
                     // Monster encounter on entry and reset
                     Monster m = Monster.findByRoomNumber(monsters, currentRoomNumber);
@@ -120,8 +131,17 @@ public class GameController {
                     Puzzle roomPuzzle = Puzzle.findByRoomNumber(puzzles, currentRoomNumber);
                     if (roomPuzzle != null && !roomPuzzle.isSolved() && !roomPuzzle.isFailedForThisVisit()) {
                         boolean solved = roomPuzzle.attemptPuzzle(allItems, player, input);
-                        if (!solved)
+                        if (solved) {
+                            if (currentRoomNumber == 6) {
+                                currentObjective = advanceObjectiveTo(2, currentObjective);
+                            } else if (currentRoomNumber == 12) {
+                                currentObjective = advanceObjectiveTo(4, currentObjective);
+                            } else if (currentRoomNumber == 18) {
+                                currentObjective = advanceObjectiveTo(6, currentObjective);
+                            }
+                        } else {
                             roomPuzzle.setFailedForThisVisit();
+                        }
                     }
 
                     if (currentRoomNumber == 20) {
@@ -276,8 +296,7 @@ public class GameController {
 
                     case "HELP" -> GameView.printHelp();
 
-                    case "OBJECTIVE", "OBJ" ->
-                        GameView.printObjective(player.getCurrentRoomNumber(), objectives);
+                    case "OBJECTIVE", "OBJ" -> GameView.printObjective(currentObjective, objectives);
 
                     case "SAVE" -> SaveManager.saveGame(player, puzzles, monsters, allItems);
 
@@ -417,6 +436,41 @@ public class GameController {
     // -------------------------------------------------------------------------
     // File loaders
     // -------------------------------------------------------------------------
+
+    private static int advanceObjectiveTo(int newObjective, int currentObjective) {
+        if (newObjective > currentObjective) {
+            return newObjective;
+        }
+        return currentObjective;
+    }
+
+    // Format: one objective per non-empty line, in order.
+    private static String[] loadObjectives(String fileName) {
+        File f = resolveDataFile(fileName);
+        if (!f.exists()) {
+            GameView.printLine("Warning: " + fileName + " not found.");
+            return new String[0];
+        }
+
+        List<String> objectives = new ArrayList<>();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty() || line.startsWith("#")) {
+                    continue;
+                }
+
+                objectives.add(line);
+            }
+        } catch (IOException e) {
+            GameView.printLine("Warning: Could not load objectives from " + fileName);
+            return new String[0];
+        }
+
+        return objectives.toArray(String[]::new);
+    }
 
     private static File resolveDataFile(String fileName) {
         File directFile = new File(fileName);
@@ -626,39 +680,4 @@ public class GameController {
         return list.toArray(Monster[]::new);
     }
 
-    // Format: roomNumber|objective
-    private static Map<Integer, String> loadObjectives(String fileName) {
-        File f = resolveDataFile(fileName);
-        Map<Integer, String> objectives = new HashMap<>();
-        if (!f.exists()) {
-            return objectives;
-        }
-
-        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                line = line.trim();
-                if (line.isEmpty() || line.startsWith("#")) {
-                    continue;
-                }
-
-                String[] parts = line.split("\\|", 2);
-                if (parts.length < 2) {
-                    continue;
-                }
-
-                try {
-                    int roomNumber = Integer.parseInt(parts[0].trim());
-                    String objective = parts[1].trim();
-                    objectives.put(roomNumber, objective);
-                } catch (NumberFormatException e) {
-                    // Ignore malformed objective rows.
-                }
-            }
-        } catch (IOException e) {
-            return objectives;
-        }
-
-        return objectives;
-    }
 }

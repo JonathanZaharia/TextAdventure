@@ -1,7 +1,5 @@
 package adventure;
 
-import java.util.Map;
-
 public class GameView {
 
     private static final int MAX_LINE_LENGTH = 60;
@@ -124,9 +122,16 @@ public class GameView {
         printLine("  Quit: QUIT or Q");
     }
 
-    public static void printObjective(int roomNumber, Map<Integer, String> objectives) {
+    public static void printObjective(int currentObjective, String[] objectives) {
         printLine("");
-        String objective = objectives == null ? null : objectives.get(roomNumber);
+        if (objectives == null || objectives.length == 0) {
+            printLine("No objective data available.");
+            printLine("");
+            return;
+        }
+
+        int index = Math.max(0, Math.min(currentObjective, objectives.length - 1));
+        String objective = objectives[index];
         if (objective == null || objective.isBlank()) {
             printLine("No objective data available.");
         } else {
