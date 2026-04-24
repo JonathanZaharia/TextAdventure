@@ -3,33 +3,33 @@
 
 # Floor 1
 1|Grand Foyer|A tall chandelier hangs above a dusty marble floor. A large portrait of Mrs. Blackwood watches from the wall.|2|5|0|3
-2|Living Room|A fireplace crackles beside scattered books and a leather armchair. A dusty bookshelf stands beside it.|4|0|1|0
-3|Study|A wooden desk sits in the center. A locked drawer with a word input mechanism faces you.|6|1|0|0
-4|Library|Tall shelves stretch floor to ceiling. Dust floats in the air. You notice a hollow book within one of the shelves.|0|0|2|0
-5|Dining Room|A long dining table set for one. Silverware neatly arranged except for a silver knife covered in red liquid.|7|0|0|1
-6|Kitchen|A locked pantry door with a keypad dominates the far wall.|0|7|3|0
-7|Stair A Hall|A staircase leads upward. The steps creak under your weight.|8|0|5|6
+2|Living Room|A fireplace crackles beside scattered books and a leather armchair. A dusty bookshelf stands beside it with a hollow book sticking out with the numbers "4510" scratched into its spine.|4|0|1|0
+3|Study|A wooden desk sits in the center. A locked drawer with a word input mechanism sits in the corner of the room.|6|1|0|0
+4|Library|Tall shelves stretch floor to ceiling. Dust floats in the stale tasting air. This place has not been used in a long time.|0|0|2|0
+5|Dining Room|A long dining table set for one. Silverware neatly arranged awaiting Guest that seem to have never came.|7|0|0|1
+6|Kitchen|A kitchen with arrangments in disarray with a locked pantry door and a keypad on the far wall.|0|7|3|0
+7|Stair A Hall|A staircase leads upward to the second floor. The steps creak under your weight.|8|0|5|6
 
 LOCK|4|Brass Key
 LOCK|7|StairA Key
 
 # Floor 2
 8|Upper Landing|A long hallway lined with ancestral portraits. One of the portraits appears to be mirrored.|9|10|7|12
-9|Master Bedroom|A large bed sits untouched. A vanity mirror faces the window. Several men's coats hang neatly.|0|0|8|0
+9|Master Bedroom|A large bed sits untouched. A vanity mirror faces the window, "Victory" etched on its gold case. Several men's coats hang neatly.|0|0|8|0
 10|Guest Bedroom|A small writing desk sits in the corner beside a locked box that allows word input.|11|0|0|8
-11|Bathroom|The medicine cabinet is wide open and the floor is slightly damp.|0|0|10|0
+11|Bathroom|The medicine cabinet is wide open and the floor is slightly damp. Three vintage apothecary jars sit inside the open cabinet and are labeled with Roman numerals: the first marked "XII", the second "I", and the third "IV".|0|0|10|0
 12|Private Office|A mechanical wall safe requiring a 3-number sequence catches your eye.|13|8|0|0
-13|Balcony|Cold air rushes in. A telescope is pointed towards the city.|0|0|12|14
-14|Stair B Hall|A staircase leads to the third floor. Footprints in the dust lead up but none lead down.|15|13|0|0
+13|Balcony|Cold fresh air rushes in. A telescope is pointed towards the city lights in the distance.|0|0|12|14
+14|Stair B Hall|A staircase leads to the third floor. Footprints worn into the tired steps lead up accompanied by fresher footprints in the thin dust, no steps are heading back down.|15|13|0|0
 
 LOCK|14|StairB Key
 
 # Floor 3
 15|The Surveillance Hall|A long corridor lined with framed portraits of previous detectives. The dust here is thinner than below.|20|16|14|0
-16|The Gallery Hall|Four large portraits hang along the right wall, each slightly crooked. A locked glass display case stands across from them.|17|0|0|15
-17|The Marionette Gallery|Life-sized mannequins dressed as detectives hang suspended by wires. One resembles you.|0|0|16|18
+16|The Gallery Hall|Four large portraits hang along the right wall, each slightly crooked with the years etched on the plauges below. A locked glass display case stands across from them.|17|0|0|15
+17|The Marionette Gallery|Life-sized mannequins hang suspended by wires throughout the Gallery. One is dressed as a Butler, the rest as Detectives that went missing long ago. One resembles you. A portrait of Mrs. Blackwood looms over watching the exhibits.|0|0|16|18
 18|The Reflection Chamber|A circular chamber lined entirely with mirrors. A pedestal holds a black book titled: Case File Blackwood.|0|17|0|19
-19|The Evidence Archive|A typewriter sits center stage, its ribbon fresh. Filing drawers filled with case folders line the walls.|0|18|0|20
+19|The Evidence Archive|A typewriter sits center stage, its ribbon fresh. Filing drawers filled with case folders line the walls. One folder catces your interest.|0|18|0|20
 20|The Blackwood Conservatory|Moonlight pours through tall glass panes. An elegant figure stands in the center with her back to you, perfectly still.|0|19|15|0
 
 LOCK|19|R19 Key
