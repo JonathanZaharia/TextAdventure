@@ -9,4 +9,4 @@
 7|Stair Guardian|A tall armored entity blocking the staircase. It does not speak, only watches.|23|4|0.15|StairB Key
 8|Charred Scholar|A charred figure clutching a burned book. Its pages still smolder.|18|3|0.15|Broken Sword
 9|Shadow Beast|A shifting mass of darkness with glowing eyes. It fills the corners of the room.|18|4|0.15|Heavy Axe
-17|Porcelain Doll|A broken porcelain doll with jerky unnatural movements. It tilts its cracked head.|15|3|0.15|Broken Sword
+17|Porcelain Doll|A broken porcelain doll with jerky unnatural movements. It tilts its cracked head.|15|3|0.15|Medicine Bottle
