@@ -4,10 +4,10 @@
 
 # Weapons
 Rusted Knife|A stained kitchen knife recovered from the mansion. Light, fast, and still sharp enough to fight with.|WEAPON|3|0|0
-Silver Knife|A silver dining knife covered in red liquid. It is small, but sharp enough to use as an early weapon.|WEAPON|2|0|5
 Broken Sword|A cracked ceremonial sword pulled from the mansion's shadows. Damaged, but still dangerous in close combat.|WEAPON|5|0|0
 Heavy Axe|A brutal two-handed axe with a worn handle and a heavy iron head built for powerful strikes.|WEAPON|7|0|0
 Shadow Blade|A dark blade humming with unnatural energy, as if the mansion itself forged it for the final climb.|WEAPON|9|0|0
+Silver Knife|A silver dining knife covered in red liquid. It is small, but sharp enough to use as an early weapon.|WEAPON|2|0|1
 
 # Consumables
 Med Kit|A compact medical kit stocked with bandages and antiseptic supplies. Restores a small amount of health.|CONSUMABLE|0|5|0
