@@ -32,4 +32,5 @@ LOCK|14|StairB Key
 19|The Evidence Archive|A typewriter sits center stage, its ribbon fresh. Filing drawers filled with case folders line the walls.|0|18|0|20
 20|The Blackwood Conservatory|Moonlight pours through tall glass panes. An elegant figure stands in the center with her back to you, perfectly still.|0|19|15|0
 
-LOCK|20|R19 Key
+LOCK|19|R19 Key
+LOCK|20|R20 Key
