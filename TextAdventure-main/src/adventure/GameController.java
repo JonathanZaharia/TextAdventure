@@ -44,9 +44,38 @@ public class GameController {
         Player player = new Player(startRoom, PLAYER_MAX_HEALTH, PLAYER_BASE_DAMAGE);
 
         try (Scanner input = new Scanner(System.in)) {
-            GameView.printWelcome();
-            input.nextLine();
-            GameView.printGoodLuck();
+            boolean started = false;
+            while (!started) {
+                GameView.printLine("");
+                GameView.printLine("=== MAIN MENU ===");
+                GameView.printLine("1. Start New Game");
+                GameView.printLine("2. Load Saved Game");
+                GameView.printLine("3. Quit");
+                GameView.print("\nChoice: ");
+
+                String startChoice = input.nextLine().trim();
+                switch (startChoice) {
+                    case "1" -> {
+                        GameView.printWelcome();
+                        input.nextLine();
+                        GameView.printGoodLuck();
+                        started = true;
+                    }
+                    case "2" -> {
+                        if (!SaveManager.hasSaveFile()) {
+                            GameView.printLine("No save file found.");
+                        } else {
+                            SaveManager.loadGame(player, rooms, puzzles, monsters, allItems);
+                            started = true;
+                        }
+                    }
+                    case "3" -> {
+                        GameView.printLine("Thanks for playing!");
+                        return;
+                    }
+                    default -> GameView.printLine("Enter 1, 2, or 3.");
+                }
+            }
 
             boolean running = true;
             boolean justEnteredRoom = true;
@@ -79,12 +108,8 @@ public class GameController {
                             GameView.showGameOverMenu();
                             running = promptGameOverChoice(input);
                             if (running) {
-                                // Restart — reset player and all game state
-                                player = new Player(startRoom, PLAYER_MAX_HEALTH, PLAYER_BASE_DAMAGE);
-                                for (Puzzle p : puzzles)
-                                    p.reset();
-                                for (Room r : rooms.values())
-                                    r.setVisited(false);
+                                player.resetHealth();
+                                previousRoom = -1;
                             }
                             justEnteredRoom = true;
                             continue;
@@ -209,11 +234,8 @@ public class GameController {
                                 GameView.showGameOverMenu();
                                 running = promptGameOverChoice(input);
                                 if (running) {
-                                    player = new Player(startRoom, PLAYER_MAX_HEALTH, PLAYER_BASE_DAMAGE);
-                                    for (Puzzle p : puzzles)
-                                        p.reset();
-                                    for (Room r : rooms.values())
-                                        r.setVisited(false);
+                                    player.resetHealth();
+                                    previousRoom = -1;
                                 }
                                 justEnteredRoom = true;
                             }
@@ -256,6 +278,14 @@ public class GameController {
 
                     case "OBJECTIVE", "OBJ" ->
                         GameView.printObjective(player.getCurrentRoomNumber(), objectives);
+
+                    case "SAVE" -> SaveManager.saveGame(player, puzzles, monsters, allItems);
+
+                    case "LOAD" -> {
+                        SaveManager.loadGame(player, rooms, puzzles, monsters, allItems);
+                        justEnteredRoom = true;
+                        previousRoom = -1;
+                    }
 
                     case "Q", "QUIT", "EXIT" -> {
                         running = false;

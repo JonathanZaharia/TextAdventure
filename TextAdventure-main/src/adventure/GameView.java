@@ -118,6 +118,8 @@ public class GameView {
         printLine("  Exits: EXITS");
         printLine("  Inventory: INVENTORY or INV");
         printLine("  Health: HEALTH or HP");
+        printLine("  Save: SAVE");
+        printLine("  Load: LOAD");
         printLine("  Help: HELP");
         printLine("  Quit: QUIT or Q");
     }
@@ -165,7 +167,7 @@ public class GameView {
         printLine("");
         printLine("=== GAME OVER ===");
         printLine("");
-        printLine("1. Start new game   2. Exit");
+        printLine("1. Respawn   2. Quit Game");
         printLine("");
         printLine(DIVIDER);
     }
