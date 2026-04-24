@@ -3,7 +3,7 @@
 # dropItemName must match an item name in Items.txt (leave empty for no drop)
 # M06 and M07 were assigned to Basement in the SRS; reassigned to rooms 6 and 7 (no basement exists)
 
-1|Restless Spirit|A faint translucent figure whispers unintelligibly. It drifts toward you with hollow eyes.|20|5|0.30|Rusted Knife
+1|Restless Spirit|A faint translucent figure that whispers unintelligibly. It drifts toward you with hollow eyes.|20|5|0.30|Rusted Knife
 5|Blood Servant|A pale figure stained with dried crimson. It moves with unsettling calm.|28|7|0.25|Rusted Knife
 6|Pantry Ghoul|A hunched creature gnawing on something unseen in the kitchen shadows.|22|6|0.20|Med Kit
 7|Stair Guardian|A tall armored entity blocking the staircase. It does not speak, only watches.|35|9|0.35|StairB Key

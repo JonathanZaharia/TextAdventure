@@ -1,5 +1,7 @@
 package adventure;
 
+import java.util.Map;
+
 public class GameView {
 
     private static final int MAX_LINE_LENGTH = 60;
@@ -35,22 +37,26 @@ public class GameView {
         System.out.println("Your goal: reach the top floor, uncover the truth, and");
         System.out.println("confront whatever is waiting in the Conservatory.");
         System.out.println();
-        System.out.println("Type HELP for commands. Type GOAL to view your objective.");
+        System.out.println("Throughout the game, you can:");
+        System.out.println("- Type HELP for a list of possible commands.");
+        System.out.println("- Type OBJ to view your current objective.");
         System.out.println();
+        System.out.print("Enter the Blackwood Mansion? ");
+    }
+
+    public static void printGoodLuck() {
+        System.out.println();
+        System.out.println("Good Luck!");
     }
 
     public static void displayRoomHeader(Room room) {
-        printLine(DIVIDER + "\n");
-        printLine("Room " + room.getRoomNumber() + ": " + room.getName());
         printLine("");
+        printLine(DIVIDER);
+        printLine("");
+        printLine("Room " + room.getRoomNumber() + ": " + room.getName());
         printLine(room.getDescription());
         if (room.isVisited())
             printLine("[Visited]");
-
-        if (room.hasItems()) {
-            printLine(
-                    "Items: " + room.getItems().stream().map(Item::getName).reduce((a, b) -> a + ", " + b).orElse(""));
-        }
     }
 
     public static void displayRoomFooter(Room room) {
@@ -66,8 +72,16 @@ public class GameView {
                         })
                         .reduce((a, b) -> a + ", " + b)
                         .orElse("None");
+
+        if (room.hasItems()) {
+            printLine("");
+            printLine(
+                    "Items: " + room.getItems().stream().map(Item::getName).reduce((a, b) -> a + ", " + b).orElse(""));
+        }
+
+        printLine("");
         printLine("Available Exits: " + exits);
-        printLine("\nMove with N/E/S/W. Type HELP for more.");
+        printLine("Move with N/E/S/W. Type HELP for more.");
     }
 
     public static void displayInventory(Player player) {
@@ -81,6 +95,7 @@ public class GameView {
                 printLine("  - " + item.getName() + " (" + item.getType() + ")" + tag);
             }
         }
+        printLine("");
         printLine("Health: " + player.getCurrentHealth() + "/" + player.getMaxHealth()
                 + "  |  Attack: " + player.getAttackDamage());
     }
@@ -99,11 +114,22 @@ public class GameView {
         printLine("  Attack: ATTACK");
         printLine("  Ignore: IGNORE");
         printLine("  Solve: SOLVE");
+        printLine("  Objective: OBJECTIVE or OBJ");
         printLine("  Exits: EXITS");
         printLine("  Inventory: INVENTORY or INV");
         printLine("  Health: HEALTH or HP");
         printLine("  Help: HELP");
         printLine("  Quit: QUIT or Q");
+    }
+
+    public static void printObjective(int roomNumber, Map<Integer, String> objectives) {
+        printLine("");
+        String objective = objectives == null ? null : objectives.get(roomNumber);
+        if (objective == null || objective.isBlank()) {
+            printLine("No objective data available.");
+        } else {
+            printLine(objective);
+        }
     }
 
     public static void handleInspect(Player player, Room room, Monster[] monsters, String target) {
@@ -135,8 +161,39 @@ public class GameView {
 
     public static void showGameOverMenu() {
         printLine("");
+        printLine(DIVIDER);
+        printLine("");
         printLine("=== GAME OVER ===");
+        printLine("");
         printLine("1. Start new game   2. Exit");
+        printLine("");
+        printLine(DIVIDER);
+    }
+
+    public static void printVictorySequence() {
+        printLine("");
+        printLine(DIVIDER);
+        printLine("");
+        printLine("=== CASE CLOSED ===");
+        printLine("");
+        printLine("Mrs. Blackwood turns slowly, still and composed.");
+        printLine("Her smile fades when you read the case record aloud:");
+        printLine("the missing guests were never random victims, but");
+        printLine("witnesses she lured into the mansion's staged riddles.");
+        printLine("");
+        printLine("Each puzzle, each locked room, and each planted clue");
+        printLine("pointed to one truth: Blackwood engineered a theater of");
+        printLine("fear to erase anyone who uncovered her crimes.");
+        printLine("");
+        printLine("When you present the final sequence and the signed file,");
+        printLine("the Conservatory doors unlock and the house falls silent.");
+        printLine("By dawn, the police return with enough evidence to reopen");
+        printLine("every closed report and arrest Eleanor Blackwood.");
+        printLine("");
+        printLine("You leave the mansion as the first light breaks over the");
+        printLine("glass roof. The Blackwood mystery is finally solved.");
+        printLine("");
+        printLine(DIVIDER);
     }
 
     private static void printWrappedLine(String line) {

@@ -16,6 +16,7 @@ public class GameController {
     private static final String ITEMS_FILE = "Item.txt";
     private static final String PUZZLE_FILE = "Puzzle.txt";
     private static final String MONSTERS_FILE = "Monsters.txt";
+    private static final String OBJECTIVES_FILE = "Objectives.txt";
 
     // Player starting values
     private static final int PLAYER_START_ROOM = 1;
@@ -34,6 +35,7 @@ public class GameController {
         loadItems(ITEMS_FILE, rooms, allItems);
         Puzzle[] puzzles = loadPuzzles(PUZZLE_FILE);
         Monster[] monsters = loadMonsters(MONSTERS_FILE);
+        Map<Integer, String> objectives = loadObjectives(OBJECTIVES_FILE);
 
         int startRoom = rooms.containsKey(PLAYER_START_ROOM)
                 ? PLAYER_START_ROOM
@@ -43,6 +45,8 @@ public class GameController {
 
         try (Scanner input = new Scanner(System.in)) {
             GameView.printWelcome();
+            input.nextLine();
+            GameView.printGoodLuck();
 
             boolean running = true;
             boolean justEnteredRoom = true;
@@ -95,6 +99,12 @@ public class GameController {
                             roomPuzzle.setFailedForThisVisit();
                     }
 
+                    if (currentRoomNumber == 20) {
+                        GameView.printVictorySequence();
+                        running = false;
+                        continue;
+                    }
+
                     GameView.displayRoomFooter(current);
                     current.markVisited();
                     justEnteredRoom = false;
@@ -138,7 +148,7 @@ public class GameController {
 
                     case "EXPLORE", "LOOK" -> {
                         if (!current.hasItems()) {
-                            GameView.printLine("There are no items in this room.");
+                            GameView.printLine("You search the room. Nothing of use turns up.");
                         } else {
                             GameView.printLine("Items in this room:");
                             for (Item item : current.getItems()) {
@@ -216,8 +226,7 @@ public class GameController {
                             GameView.printLine("There is no monster here.");
                         } else {
                             monster.setIgnored();
-                            GameView.printLine("You back away. The " + monster.getName()
-                                    + " lets you go and will not appear again.");
+                            GameView.printLine("You back away carefully. The monster drifts back into the shadows.");
                         }
                     }
 
@@ -245,6 +254,9 @@ public class GameController {
 
                     case "HELP" -> GameView.printHelp();
 
+                    case "OBJECTIVE", "OBJ" ->
+                        GameView.printObjective(player.getCurrentRoomNumber(), objectives);
+
                     case "Q", "QUIT", "EXIT" -> {
                         running = false;
                         GameView.printLine("Thanks for playing!");
@@ -258,9 +270,10 @@ public class GameController {
 
     private static boolean handleMonsterEncounter(Monster monster, List<Item> allItems, Player player, Room room,
             Scanner input) {
-        GameView.printLine("\n! A " + monster.getName() + " is here !");
+        GameView.printLine("");
+        GameView.printLine("! " + monster.getName().toUpperCase() + " HAS APPEARED !");
         GameView.printLine(monster.getDescription());
-        GameView.printLine("\nType ATTACK to fight or IGNORE to back away.");
+        GameView.printLine("Type ATTACK to fight or IGNORE to back away.");
 
         while (true) {
             GameView.print("\nChoice: ");
@@ -272,22 +285,27 @@ public class GameController {
 
             if (choice.equals("IGNORE")) {
                 monster.setIgnored();
-                GameView.printLine("\nYou back away. The " + monster.getName() + " will not appear again.\n");
+                GameView.printLine("You back away carefully. The monster drifts back into the shadows.");
                 return true;
             }
 
-            GameView.printLine("\nType ATTACK to fight or IGNORE to back away.");
+            if (choice.equals("HELP") || choice.equals("OBJ") || choice.equals("OBJECTIVE")) {
+                GameView.printLine("You must deal with the threat first. Type ATTACK to fight or IGNORE to back away.");
+            } else {
+                GameView.printLine("Unknown command.");
+            }
         }
     }
 
     private static boolean handleCombat(Monster monster, List<Item> allItems, Player player, Room room,
             Scanner input) {
-        GameView.printLine("\n--- COMBAT: " + monster.getName() + " ---");
+        GameView.printLine("");
+        GameView.printLine("--- COMBAT: " + monster.getName() + " ---");
 
         while (!monster.isDead() && !player.isDead()) {
-            GameView.printLine("\nYour HP: " + player.getCurrentHealth() + "/" + player.getMaxHealth()
+            GameView.printLine("Your HP: " + player.getCurrentHealth() + "/" + player.getMaxHealth()
                     + "  |  " + monster.getName() + " HP: " + monster.getCurrentHealth());
-            GameView.print("Action (ATTACK / HEAL [item] / EQUIP [item] / UNEQUIP / INVENTORY): ");
+            GameView.print("\nChoice (ATTACK / HEAL [item] / EQUIP [item] / UNEQUIP / INVENTORY): ");
 
             String line = input.nextLine().trim();
             if (line.isEmpty()) {
@@ -322,6 +340,8 @@ public class GameController {
                         GameView.printLine("You have been defeated...");
                         return false;
                     }
+
+                    GameView.printLine("");
                 }
                 case "HEAL" -> {
                     player.consumeHealingItem(arg);
@@ -338,6 +358,8 @@ public class GameController {
                             GameView.printLine("You have been defeated...");
                             return false;
                         }
+
+                        GameView.printLine("");
                     }
                 }
                 case "EQUIP" -> player.equipWeapon(arg);
@@ -352,7 +374,7 @@ public class GameController {
 
     private static boolean promptGameOverChoice(Scanner input) {
         while (true) {
-            GameView.print("Choice: ");
+            GameView.print("\nChoice: ");
             String choice = input.nextLine().trim();
             if (choice.equals("1"))
                 return true;
@@ -572,5 +594,41 @@ public class GameController {
         }
 
         return list.toArray(Monster[]::new);
+    }
+
+    // Format: roomNumber|objective
+    private static Map<Integer, String> loadObjectives(String fileName) {
+        File f = resolveDataFile(fileName);
+        Map<Integer, String> objectives = new HashMap<>();
+        if (!f.exists()) {
+            return objectives;
+        }
+
+        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty() || line.startsWith("#")) {
+                    continue;
+                }
+
+                String[] parts = line.split("\\|", 2);
+                if (parts.length < 2) {
+                    continue;
+                }
+
+                try {
+                    int roomNumber = Integer.parseInt(parts[0].trim());
+                    String objective = parts[1].trim();
+                    objectives.put(roomNumber, objective);
+                } catch (NumberFormatException e) {
+                    // Ignore malformed objective rows.
+                }
+            }
+        } catch (IOException e) {
+            return objectives;
+        }
+
+        return objectives;
     }
 }

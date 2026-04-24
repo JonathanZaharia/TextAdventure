@@ -138,9 +138,10 @@ public class Puzzle {
             return false;
         }
 
-        GameView.printLine("\n--- Puzzle: " + name + " ---");
+        GameView.printLine("");
+        GameView.printLine("! PUZZLE: " + name.toUpperCase() + " !");
         GameView.printLine(description);
-        GameView.printLine("\nAttempts remaining: " + remainingAttempts);
+        GameView.printLine("Attempts remaining: " + remainingAttempts);
         GameView.print("\nAnswer: ");
 
         String answer = input.nextLine().trim();
