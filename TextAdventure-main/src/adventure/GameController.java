@@ -89,8 +89,9 @@ public class GameController {
                 // When leaving a room, reset puzzle visit state for the room just left
                 if (previousRoom != -1 && previousRoom != currentRoomNumber) {
                     Puzzle prev = Puzzle.findByRoomNumber(puzzles, previousRoom);
-                    if (prev != null)
+                    if (prev != null) {
                         prev.clearFailedForThisVisit();
+                    }
                 }
                 previousRoom = currentRoomNumber;
 
@@ -112,6 +113,7 @@ public class GameController {
                     if (m != null && m.isIgnored()) {
                         m.reset();
                     }
+
                     Monster monster = Monster.findActiveByRoomNumber(monsters, currentRoomNumber);
                     if (monster != null) {
                         boolean survived = handleMonsterEncounter(monster, allItems, player, current, input);
@@ -127,28 +129,18 @@ public class GameController {
                         }
                     }
 
-                    // Puzzle check on entry
+                    // Puzzle encounter on entry
                     Puzzle roomPuzzle = Puzzle.findByRoomNumber(puzzles, currentRoomNumber);
-                    if (roomPuzzle != null && !roomPuzzle.isSolved() && !roomPuzzle.isFailedForThisVisit()) {
-                        GameView.printLine(roomPuzzle.getDescription());
-                        GameView.print("Your answer: ");
-                        String answer = input.nextLine().trim();
-                        boolean solved = roomPuzzle.attemptSolve(answer);
-                        if (solved) {
-                            GameView.printLine(roomPuzzle.getSuccessMessage());
-                            roomPuzzle.grantReward(player, allItems);
+                    if (roomPuzzle != null && !roomPuzzle.isSolved()) {
+                        boolean solvedPuzzle = handlePuzzleEncounter(roomPuzzle, player, allItems, current, input);
+
+                        if (solvedPuzzle) {
                             if (currentRoomNumber == 6) {
                                 currentObjective = advanceObjectiveTo(2, currentObjective);
                             } else if (currentRoomNumber == 12) {
                                 currentObjective = advanceObjectiveTo(4, currentObjective);
                             } else if (currentRoomNumber == 18) {
                                 currentObjective = advanceObjectiveTo(6, currentObjective);
-                            }
-                        } else {
-                            GameView.printLine(
-                                    "That's not correct. Attempts remaining: " + roomPuzzle.getRemainingAttempts());
-                            if (!roomPuzzle.hasAttemptsRemaining()) {
-                                roomPuzzle.setFailedForThisVisit();
                             }
                         }
                     }
@@ -166,8 +158,10 @@ public class GameController {
 
                 GameView.print("\nChoice: ");
                 String inputLine = input.nextLine().trim();
-                if (inputLine.isEmpty())
+
+                if (inputLine.isEmpty()) {
                     continue;
+                }
 
                 String[] parts = inputLine.split(" ", 2);
                 String cmd = parts[0].toUpperCase();
@@ -201,6 +195,8 @@ public class GameController {
                     }
 
                     case "EXPLORE", "LOOK" -> {
+                        GameView.printLine(current.getDescription());
+
                         if (!current.hasItems()) {
                             GameView.printLine("You search the room. Nothing of use turns up.");
                         } else {
@@ -273,35 +269,35 @@ public class GameController {
 
                     case "IGNORE" -> {
                         Monster monster = Monster.findActiveByRoomNumber(monsters, currentRoomNumber);
-                        if (monster == null) {
-                            GameView.printLine("There is no monster here.");
-                        } else {
+                        Puzzle roomPuzzle = Puzzle.findByRoomNumber(puzzles, currentRoomNumber);
+
+                        if (monster != null) {
                             monster.setIgnored();
                             GameView.printLine("You back away carefully. The monster drifts back into the shadows.");
+                        } else if (roomPuzzle != null && !roomPuzzle.isSolved()) {
+                            GameView.printLine("You ignore the puzzle for now.");
+                        } else {
+                            GameView.printLine("There is nothing here to ignore.");
                         }
                     }
 
                     case "SOLVE" -> {
                         Puzzle roomPuzzle = Puzzle.findByRoomNumber(puzzles, currentRoomNumber);
+
                         if (roomPuzzle == null) {
                             GameView.printLine("There is no puzzle here.");
                         } else if (roomPuzzle.isSolved()) {
                             GameView.printLine("This puzzle has already been solved.");
-                        } else if (roomPuzzle.isFailedForThisVisit()) {
-                            GameView.printLine("You have no attempts remaining for this puzzle right now.");
                         } else {
-                            GameView.printLine(roomPuzzle.getDescription());
-                            GameView.print("Your answer: ");
-                            String answer = input.nextLine().trim();
-                            boolean solved = roomPuzzle.attemptSolve(answer);
-                            if (solved) {
-                                GameView.printLine(roomPuzzle.getSuccessMessage());
-                                roomPuzzle.grantReward(player, allItems);
-                            } else {
-                                GameView.printLine(
-                                        "That's not correct. Attempts remaining: " + roomPuzzle.getRemainingAttempts());
-                                if (!roomPuzzle.hasAttemptsRemaining()) {
-                                    roomPuzzle.setFailedForThisVisit();
+                            boolean solvedPuzzle = handlePuzzleSolveMenu(roomPuzzle, player, allItems, current, input);
+
+                            if (solvedPuzzle) {
+                                if (currentRoomNumber == 6) {
+                                    currentObjective = advanceObjectiveTo(2, currentObjective);
+                                } else if (currentRoomNumber == 12) {
+                                    currentObjective = advanceObjectiveTo(4, currentObjective);
+                                } else if (currentRoomNumber == 18) {
+                                    currentObjective = advanceObjectiveTo(6, currentObjective);
                                 }
                             }
                         }
@@ -337,8 +333,91 @@ public class GameController {
         }
     }
 
+    private static boolean handlePuzzleEncounter(Puzzle puzzle, Player player, List<Item> allItems, Room room,
+            Scanner input) {
+
+        GameView.printLine("");
+        GameView.printLine(puzzle.getDescription());
+        GameView.printLine("Type SOLVE to solve or IGNORE to ignore the puzzle.");
+
+        while (true) {
+            GameView.print("\nChoice: ");
+            String choice = input.nextLine().trim().toUpperCase();
+
+            if (choice.equals("SOLVE")) {
+                return handlePuzzleSolveMenu(puzzle, player, allItems, room, input);
+            }
+
+            if (choice.equals("IGNORE")) {
+                GameView.printLine("You ignore the puzzle for now.");
+                return false;
+            }
+
+            if (choice.equals("LOOK")) {
+                GameView.printLine(room.getDescription());
+                GameView.printLine(puzzle.getDescription());
+            } else {
+                GameView.printLine("Unknown command. Type SOLVE to solve or IGNORE to ignore the puzzle.");
+            }
+        }
+    }
+
+    private static boolean handlePuzzleSolveMenu(Puzzle puzzle, Player player, List<Item> allItems, Room room,
+            Scanner input) {
+
+        puzzle.startSolveSession();
+
+        while (!puzzle.isSolved() && puzzle.hasAttemptsRemaining()) {
+            GameView.printLine("");
+            GameView.printLine(puzzle.getDescription());
+            GameView.printLine("Attempts left: " + puzzle.getRemainingAttempts());
+            GameView.print("Enter answer or type IGNORE: ");
+
+            String answer = input.nextLine().trim();
+
+            if (answer.equalsIgnoreCase("IGNORE")) {
+                GameView.printLine("You step away from the puzzle.");
+                return false;
+            }
+
+            if (answer.equalsIgnoreCase("LOOK")) {
+                GameView.printLine(room.getDescription());
+                GameView.printLine(puzzle.getDescription());
+                continue;
+            }
+
+            if (answer.isEmpty()) {
+                GameView.printLine("Please enter an answer or type IGNORE.");
+                continue;
+            }
+
+            boolean solved = puzzle.attemptSolve(answer);
+
+            if (solved) {
+                GameView.printLine(puzzle.getSuccessMessage());
+
+                Item reward = puzzle.grantReward(player, allItems);
+                if (reward != null) {
+                    GameView.printLine("You received: " + reward.getName());
+                }
+
+                return true;
+            } else {
+                GameView.printLine("That's not correct. Attempts remaining: " + puzzle.getRemainingAttempts());
+            }
+        }
+
+        if (!puzzle.isSolved() && !puzzle.hasAttemptsRemaining()) {
+            GameView.printLine("You are out of attempts.");
+            GameView.printLine("You can attempt to solve it again by entering SOLVE or coming back to the room.");
+        }
+
+        return false;
+    }
+
     private static boolean handleMonsterEncounter(Monster monster, List<Item> allItems, Player player, Room room,
             Scanner input) {
+
         GameView.printLine("");
         GameView.printLine("! " + monster.getName().toUpperCase() + " HAS APPEARED !");
         GameView.printLine(monster.getDescription());
@@ -368,6 +447,7 @@ public class GameController {
 
     private static boolean handleCombat(Monster monster, List<Item> allItems, Player player, Room room,
             Scanner input) {
+
         GameView.printLine("");
         GameView.printLine("--- COMBAT: " + monster.getName() + " ---");
 
@@ -377,6 +457,7 @@ public class GameController {
             GameView.print("\nChoice (ATTACK / HEAL [item] / EQUIP [item] / UNEQUIP / INVENTORY): ");
 
             String line = input.nextLine().trim();
+
             if (line.isEmpty()) {
                 continue;
             }
@@ -412,6 +493,7 @@ public class GameController {
 
                     GameView.printLine("");
                 }
+
                 case "HEAL" -> {
                     player.consumeHealingItem(arg);
 
@@ -431,9 +513,13 @@ public class GameController {
                         GameView.printLine("");
                     }
                 }
+
                 case "EQUIP" -> player.equipWeapon(arg);
+
                 case "UNEQUIP" -> player.unequipWeapon();
+
                 case "INVENTORY", "INV" -> GameView.displayInventory(player);
+
                 default -> GameView.printLine("Unknown combat command.");
             }
         }
@@ -445,10 +531,15 @@ public class GameController {
         while (true) {
             GameView.print("\nChoice: ");
             String choice = input.nextLine().trim();
-            if (choice.equals("1"))
+
+            if (choice.equals("1")) {
                 return true;
-            if (choice.equals("2"))
+            }
+
+            if (choice.equals("2")) {
                 return false;
+            }
+
             GameView.printLine("Enter 1 or 2.");
         }
     }
@@ -475,12 +566,14 @@ public class GameController {
         if (newObjective > currentObjective) {
             return newObjective;
         }
+
         return currentObjective;
     }
 
     // Format: one objective per non-empty line, in order.
     private static String[] loadObjectives(String fileName) {
         File f = resolveDataFile(fileName);
+
         if (!f.exists()) {
             GameView.printLine("Warning: " + fileName + " not found.");
             return new String[0];
@@ -490,8 +583,10 @@ public class GameController {
 
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
+
             while ((line = br.readLine()) != null) {
                 line = line.trim();
+
                 if (line.isEmpty() || line.startsWith("#")) {
                     continue;
                 }
@@ -508,22 +603,31 @@ public class GameController {
 
     private static File resolveDataFile(String fileName) {
         File directFile = new File(fileName);
-        if (directFile.exists())
+
+        if (directFile.exists()) {
             return directFile;
+        }
 
         File projectFile = new File("TextAdventure-main", fileName);
-        if (projectFile.exists())
+
+        if (projectFile.exists()) {
             return projectFile;
+        }
 
         File current = new File(System.getProperty("user.dir"));
+
         while (current != null) {
             File candidate = new File(current, fileName);
-            if (candidate.exists())
+
+            if (candidate.exists()) {
                 return candidate;
+            }
 
             File nestedProjectFile = new File(current, "TextAdventure-main" + File.separator + fileName);
-            if (nestedProjectFile.exists())
+
+            if (nestedProjectFile.exists()) {
                 return nestedProjectFile;
+            }
 
             current = current.getParentFile();
         }
@@ -535,15 +639,20 @@ public class GameController {
     // Optional lock line: LOCK|roomNumber|requiredItemName
     private static boolean loadRooms(String fileName, Map<Integer, Room> rooms) {
         File f = resolveDataFile(fileName);
-        if (!f.exists())
+
+        if (!f.exists()) {
             return false;
+        }
 
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
+
             while ((line = br.readLine()) != null) {
                 line = line.trim();
-                if (line.isEmpty() || line.startsWith("#"))
+
+                if (line.isEmpty() || line.startsWith("#")) {
                     continue;
+                }
 
                 String[] parts = line.split("\\|", -1);
 
@@ -551,17 +660,21 @@ public class GameController {
                     if (parts.length >= 3) {
                         try {
                             Room room = rooms.get(Integer.parseInt(parts[1].trim()));
-                            if (room != null)
+
+                            if (room != null) {
                                 room.setLocked(parts[2].trim());
+                            }
                         } catch (NumberFormatException e) {
                             // Ignore malformed lock rows.
                         }
                     }
+
                     continue;
                 }
 
-                if (parts.length < 7)
+                if (parts.length < 7) {
                     continue;
+                }
 
                 try {
                     int number = Integer.parseInt(parts[0].trim());
@@ -573,6 +686,7 @@ public class GameController {
                     room.addExit("E", Integer.parseInt(parts[4].trim()));
                     room.addExit("S", Integer.parseInt(parts[5].trim()));
                     room.addExit("W", Integer.parseInt(parts[6].trim()));
+
                     rooms.put(number, room);
                 } catch (NumberFormatException e) {
                     // Ignore malformed room rows.
@@ -588,6 +702,7 @@ public class GameController {
     // Format: name|description|type|attackBonus|healAmount|roomNumber
     private static void loadItems(String fileName, Map<Integer, Room> rooms, List<Item> allItems) {
         File f = resolveDataFile(fileName);
+
         if (!f.exists()) {
             GameView.printLine("Warning: " + fileName + " not found.");
             return;
@@ -595,14 +710,19 @@ public class GameController {
 
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
+
             while ((line = br.readLine()) != null) {
                 line = line.trim();
-                if (line.isEmpty() || line.startsWith("#"))
+
+                if (line.isEmpty() || line.startsWith("#")) {
                     continue;
+                }
 
                 String[] parts = line.split("\\|", -1);
-                if (parts.length < 6)
+
+                if (parts.length < 6) {
                     continue;
+                }
 
                 try {
                     String name = parts[0].trim();
@@ -614,8 +734,10 @@ public class GameController {
 
                     Item item = new Item(name, description, type, attackBonus, healAmount, roomNumber);
                     allItems.add(item);
-                    if (roomNumber > 0 && rooms.containsKey(roomNumber))
+
+                    if (roomNumber > 0 && rooms.containsKey(roomNumber)) {
                         rooms.get(roomNumber).addItem(item);
+                    }
                 } catch (NumberFormatException e) {
                     // Ignore malformed item rows.
                 }
@@ -629,6 +751,7 @@ public class GameController {
     // roomNumber|name|description|correctAnswer|successMessage|rewardItemName|allowedAttempts
     private static Puzzle[] loadPuzzles(String fileName) {
         File f = resolveDataFile(fileName);
+
         if (!f.exists()) {
             GameView.printLine("Warning: " + fileName + " not found.");
             return new Puzzle[0];
@@ -638,14 +761,19 @@ public class GameController {
 
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
+
             while ((line = br.readLine()) != null) {
                 line = line.trim();
-                if (line.isEmpty() || line.startsWith("#"))
+
+                if (line.isEmpty() || line.startsWith("#")) {
                     continue;
+                }
 
                 String[] parts = line.split("\\|", -1);
-                if (parts.length < 7)
+
+                if (parts.length < 7) {
                     continue;
+                }
 
                 try {
                     int roomNumber = Integer.parseInt(parts[0].trim());
@@ -674,6 +802,7 @@ public class GameController {
     // roomNumber|name|description|health|attackDamage|threshold|dropItemName
     private static Monster[] loadMonsters(String fileName) {
         File f = resolveDataFile(fileName);
+
         if (!f.exists()) {
             GameView.printLine("Warning: " + fileName + " not found.");
             return new Monster[0];
@@ -683,14 +812,19 @@ public class GameController {
 
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String line;
+
             while ((line = br.readLine()) != null) {
                 line = line.trim();
-                if (line.isEmpty() || line.startsWith("#"))
+
+                if (line.isEmpty() || line.startsWith("#")) {
                     continue;
+                }
 
                 String[] parts = line.split("\\|", -1);
-                if (parts.length < 7)
+
+                if (parts.length < 7) {
                     continue;
+                }
 
                 try {
                     int roomNumber = Integer.parseInt(parts[0].trim());
@@ -713,5 +847,4 @@ public class GameController {
 
         return list.toArray(Monster[]::new);
     }
-
 }
