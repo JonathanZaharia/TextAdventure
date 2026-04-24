@@ -11,8 +11,8 @@ Shadow Blade|A dark blade humming with unnatural energy, as if the mansion itsel
 
 # Consumables
 Med Kit|A compact medical kit stocked with bandages and antiseptic supplies. Restores a small amount of health.|CONSUMABLE|0|5|0
+Medicine Bottle|A dusty medicine bottle from the bathroom cabinet. Restores a moderate amount of health.|CONSUMABLE|0|6|0
 Bandage|A small roll of bandages found among the mansion supplies. Restores a small amount of health.|CONSUMABLE|0|4|4
-Medicine Bottle|A dusty medicine bottle from the bathroom cabinet. Restores a moderate amount of health.|CONSUMABLE|0|6|11
 First Aid Kit|A larger emergency kit left near the upper hallway. Restores a good amount of health.|CONSUMABLE|0|8|15
 
 # Keys and progression items
