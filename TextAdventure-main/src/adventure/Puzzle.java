@@ -14,25 +14,30 @@ public class Puzzle {
 
     private int remainingAttempts;
     private boolean solved;
-    private boolean failedForThisVisit;
+    private boolean failedForThisSession;
 
     public Puzzle(String name, String description, String correctAnswer,
                   String successMessage, String rewardItemName,
                   int allowedAttempts, int roomNumber) {
+
         this.name = name != null ? name.trim() : "";
         this.description = description != null ? description.trim() : "";
         this.correctAnswer = correctAnswer != null ? correctAnswer.trim() : "";
         this.successMessage = successMessage != null ? successMessage.trim() : "";
         this.rewardItemName = rewardItemName != null ? rewardItemName.trim() : "";
 
-        // Every puzzle gets 4 attempts
+        // Always 5 attempts per solve session
         this.allowedAttempts = 4;
         this.remainingAttempts = this.allowedAttempts;
 
         this.roomNumber = roomNumber;
         this.solved = false;
-        this.failedForThisVisit = false;
+        this.failedForThisSession = false;
     }
+
+    // ========================
+    // GETTERS
+    // ========================
 
     public String getName() {
         return name;
@@ -78,67 +83,93 @@ public class Puzzle {
         return remainingAttempts > 0;
     }
 
+    // ========================
+    // SESSION / STATE
+    // ========================
+
+    public boolean isFailedForThisSession() {
+        return failedForThisSession;
+    }
+
+    public void clearFailedForThisSession() {
+        failedForThisSession = false;
+    }
+
+    // Compatibility
     public boolean isFailedForThisVisit() {
-        return failedForThisVisit;
+        return failedForThisSession;
     }
 
     public void setFailedForThisVisit() {
-        this.failedForThisVisit = true;
+        failedForThisSession = true;
     }
 
     public void clearFailedForThisVisit() {
-        this.failedForThisVisit = false;
+        failedForThisSession = false;
     }
+
+    // ========================
+    // INPUT CHECKS
+    // ========================
 
     public boolean isBlankAnswer(String answer) {
         return answer == null || answer.trim().isEmpty();
     }
 
     public boolean isCommandWord(String answer) {
-        if (answer == null) {
-            return false;
-        }
+        if (answer == null) return false;
 
         String input = answer.trim().toLowerCase();
         return input.equals("ignore") || input.equals("solve") || input.equals("look");
     }
 
     public boolean matchesAnswer(String answer) {
-        if (isBlankAnswer(answer)) {
-            return false;
-        }
-
+        if (isBlankAnswer(answer)) return false;
         return answer.trim().equalsIgnoreCase(correctAnswer);
     }
 
-    // Pure model logic: checks answer and updates puzzle state
+    // ========================
+    // SOLVE SESSION LOGIC
+    // ========================
+
+    public void startSolveSession() {
+        if (!solved) {
+            remainingAttempts = allowedAttempts;
+            failedForThisSession = false;
+        }
+    }
+
     public boolean attemptSolve(String answer) {
+
         if (solved || !hasAttemptsRemaining()) {
             return false;
         }
 
-        // Blank answers and command words should NOT count as attempts
         if (isBlankAnswer(answer) || isCommandWord(answer)) {
             return false;
         }
 
         if (matchesAnswer(answer)) {
             solved = true;
-            failedForThisVisit = false;
+            failedForThisSession = false;
             return true;
         }
 
         remainingAttempts = Math.max(0, remainingAttempts - 1);
 
         if (!hasAttemptsRemaining()) {
-            failedForThisVisit = true;
+            failedForThisSession = true;
         }
 
         return false;
     }
 
-    // Applies reward if puzzle has one and it exists in the item list
+    // ========================
+    // REWARD LOGIC
+    // ========================
+
     public Item grantReward(Player player, List<Item> allItems) {
+
         if (!solved || !hasItemReward() || player == null || allItems == null) {
             return null;
         }
@@ -146,11 +177,7 @@ public class Puzzle {
         for (Item item : allItems) {
             if (item != null && item.getName().equalsIgnoreCase(rewardItemName)) {
 
-                // Prevent adding the same reward multiple times
-                if (item.getCurrentLocation() == 0) {
-                    return null;
-                }
-
+                // ALWAYS give reward (no location check)
                 item.setCurrentLocation(0);
                 player.addItem(item);
                 return item;
@@ -160,23 +187,30 @@ public class Puzzle {
         return null;
     }
 
+    // ========================
+    // RESET
+    // ========================
+
     public void resetAttemptsForVisit() {
         if (!solved) {
             remainingAttempts = allowedAttempts;
-            failedForThisVisit = false;
+            failedForThisSession = false;
         }
     }
 
     public void reset() {
         solved = false;
         remainingAttempts = allowedAttempts;
-        failedForThisVisit = false;
+        failedForThisSession = false;
     }
 
+    // ========================
+    // FINDER
+    // ========================
+
     public static Puzzle findByRoomNumber(Puzzle[] puzzles, int roomNumber) {
-        if (puzzles == null) {
-            return null;
-        }
+
+        if (puzzles == null) return null;
 
         for (Puzzle puzzle : puzzles) {
             if (puzzle != null && puzzle.getRoomNumber() == roomNumber) {
