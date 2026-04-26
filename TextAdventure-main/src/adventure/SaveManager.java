@@ -18,7 +18,7 @@ public class SaveManager {
         return new File(SAVE_FILE).exists();
     }
 
-    public static void saveGame(Player player, Puzzle[] puzzles, Monster[] monsters, List<Item> allItems) {
+    public static boolean saveGame(Player player, Puzzle[] puzzles, Monster[] monsters, List<Item> allItems) {
         try (PrintWriter out = new PrintWriter(new FileWriter(SAVE_FILE))) {
             out.println("ROOM=" + player.getCurrentRoomNumber());
             out.println("HP=" + player.getCurrentHealth());
@@ -44,20 +44,18 @@ public class SaveManager {
                     out.println("MONSTER=" + monster.getRoomNumber() + "|IGNORED");
                 }
             }
-
-            GameView.printLine("Game saved.");
+            return true;
         } catch (IOException e) {
-            GameView.printLine("Could not save game.");
+            return false;
         }
     }
 
-    public static void loadGame(Player player, Map<Integer, Room> rooms,
+    public static boolean loadGame(Player player, Map<Integer, Room> rooms,
             Puzzle[] puzzles, Monster[] monsters, List<Item> allItems) {
 
         File saveFile = new File(SAVE_FILE);
         if (!saveFile.exists()) {
-            GameView.printLine("No save file found.");
-            return;
+            return false;
         }
 
         int savedRoom = player.getCurrentRoomNumber();
@@ -101,8 +99,7 @@ public class SaveManager {
                 }
             }
         } catch (Exception e) {
-            GameView.printLine("Could not load save file.");
-            return;
+            return false;
         }
 
         if (rooms.containsKey(savedRoom)) {
@@ -153,7 +150,7 @@ public class SaveManager {
             }
         }
 
-        GameView.printLine("Saved game loaded.");
+        return true;
     }
 
     private static void rebuildItems(Player player, Map<Integer, Room> rooms, List<Item> allItems) {

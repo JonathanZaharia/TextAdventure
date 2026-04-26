@@ -64,7 +64,7 @@ public class Player {
         return currentRoomNumber;
     }
 
-    // --- Health ---
+    // === Health ===
 
     public void takeDamage(int amount) {
         currentHealth = Math.max(0, currentHealth - amount);
@@ -78,7 +78,7 @@ public class Player {
         currentHealth = maxHealth;
     }
 
-    // --- Combat ---
+    // === Combat ===
 
     // Returns base damage + weapon bonus if equipped
     public int getAttackDamage() {
@@ -103,7 +103,7 @@ public class Player {
         return previous;
     }
 
-    // --- Inventory ---
+    // === Inventory ===
 
     public void addItem(Item item) {
         if (item != null && !inventory.contains(item))
@@ -157,64 +157,63 @@ public class Player {
         equippedItem = null;
     }
 
-    public void pickupItem(Room room, String itemName) {
+    public String pickupItem(Room room, String itemName) {
         Item item = room.findItem(itemName);
         if (item == null) {
-            System.out.println("There is no item called '" + itemName + "' here.");
-            return;
+            return "There is no item called '" + itemName + "' here.";
         }
         addItem(item);
+        item.moveToInventory();
         room.removeItem(item);
-        System.out.println(item.getName() + " added to inventory.");
+        return item.getName() + " added to inventory.";
     }
 
-    public void dropItem(Room room, String itemName) {
+    public String dropItem(Room room, String itemName) {
         Item item = removeItemByName(itemName);
         if (item == null) {
-            System.out.println("You do not have '" + itemName + "' in your inventory.");
-            return;
+            return "You do not have '" + itemName + "' in your inventory.";
         }
         room.addItem(item);
-        System.out.println(item.getName() + " dropped in " + room.getName() + ".");
+        item.moveToRoom(room.getRoomNumber());
+        return item.getName() + " dropped in " + room.getName() + ".";
     }
 
-    public void equipWeapon(String itemName) {
+    public String equipWeapon(String itemName) {
         Item item = getItemByName(itemName);
         if (item == null) {
-            System.out.println("You do not have '" + itemName + "'.");
-            return;
+            return "You do not have '" + itemName + "'.";
         }
         if (!equipItem(item)) {
-            System.out.println(item.getName() + " cannot be equipped - it is not a weapon.");
-            return;
+            return item.getName() + " cannot be equipped - it is not a weapon.";
         }
-        System.out.println(item.getName() + " equipped. Attack: " + getAttackDamage());
+        return item.getName() + " equipped. Attack: " + getAttackDamage();
     }
 
-    public void unequipWeapon() {
+    public String unequipWeapon() {
         Item previous = unequipItem();
         if (previous == null) {
-            System.out.println("Nothing is equipped.");
-            return;
+            return "Nothing is equipped.";
         }
-        System.out.println(previous.getName() + " unequipped. Attack: " + getAttackDamage());
+        return previous.getName() + " unequipped. Attack: " + getAttackDamage();
     }
 
-    public void consumeHealingItem(String itemName) {
+    public String consumeHealingItem(String itemName) {
+        if (currentHealth >= maxHealth) {
+            return "You are already at full health.";
+        }
+
         Item item = getItemByName(itemName);
         if (item == null) {
-            System.out.println("You do not have '" + itemName + "'.");
-            return;
+            return "You do not have '" + itemName + "'.";
         }
         if (!item.isConsumable()) {
-            System.out.println(item.getName() + " cannot be consumed.");
-            return;
+            return item.getName() + " cannot be consumed.";
         }
         int before = getCurrentHealth();
         heal(item.getHealAmount());
         removeItem(item);
-        System.out.println("Used " + item.getName() + ". Restored "
+        return "Used " + item.getName() + ". Restored "
                 + (getCurrentHealth() - before) + " HP. Health: "
-                + getCurrentHealth() + "/" + getMaxHealth());
+                + getCurrentHealth() + "/" + getMaxHealth();
     }
 }

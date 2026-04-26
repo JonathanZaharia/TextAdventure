@@ -1,9 +1,5 @@
 package adventure;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,15 +23,15 @@ public class GameController {
         Map<Integer, Room> rooms = new HashMap<>();
         List<Item> allItems = new ArrayList<>();
 
-        if (!loadRooms(ROOMS_FILE, rooms)) {
+        if (!GameDataLoader.loadRooms(ROOMS_FILE, rooms)) {
             GameView.printLine("ERROR: Could not load room data from " + ROOMS_FILE);
             return;
         }
 
-        loadItems(ITEMS_FILE, rooms, allItems);
-        Puzzle[] puzzles = loadPuzzles(PUZZLE_FILE);
-        Monster[] monsters = loadMonsters(MONSTERS_FILE);
-        String[] objectives = loadObjectives(OBJECTIVES_FILE);
+        GameDataLoader.loadItems(ITEMS_FILE, rooms, allItems);
+        Puzzle[] puzzles = GameDataLoader.loadPuzzles(PUZZLE_FILE);
+        Monster[] monsters = GameDataLoader.loadMonsters(MONSTERS_FILE);
+        String[] objectives = GameDataLoader.loadObjectives(OBJECTIVES_FILE);
 
         int startRoom = rooms.containsKey(PLAYER_START_ROOM)
                 ? PLAYER_START_ROOM
@@ -65,8 +61,12 @@ public class GameController {
                         if (!SaveManager.hasSaveFile()) {
                             GameView.printLine("No save file found.");
                         } else {
-                            SaveManager.loadGame(player, rooms, puzzles, monsters, allItems);
-                            started = true;
+                            if (SaveManager.loadGame(player, rooms, puzzles, monsters, allItems)) {
+                                GameView.printLine("Saved game loaded.");
+                                started = true;
+                            } else {
+                                GameView.printLine("Could not load save file.");
+                            }
                         }
                     }
                     case "3" -> {
@@ -119,11 +119,20 @@ public class GameController {
                         boolean survived = handleMonsterEncounter(monster, allItems, player, current, input);
                         if (!survived) {
                             GameView.showGameOverMenu();
-                            running = promptGameOverChoice(input);
-                            if (running) {
+                            int gameOverChoice = promptGameOverChoice(input, player, rooms, puzzles, monsters,
+                                    allItems);
+
+                            if (gameOverChoice == 2) {
+                                running = false;
+                            } else if (gameOverChoice == 1) {
                                 player.resetHealth();
+                                running = true;
+                                previousRoom = -1;
+                            } else {
+                                running = true;
                                 previousRoom = -1;
                             }
+
                             justEnteredRoom = true;
                             continue;
                         }
@@ -182,6 +191,7 @@ public class GameController {
                                     String keyName = dest.getRequiredItemName();
                                     dest.unlock();
                                     GameView.printLine("You use the " + keyName + " to unlock the door.");
+                                    player.removeItemByName(keyName);
                                     player.setCurrentRoomNumber(exitDest);
                                     justEnteredRoom = true;
                                 } else {
@@ -194,24 +204,26 @@ public class GameController {
                         }
                     }
 
-                    case "EXPLORE", "LOOK" -> {
-                        GameView.printLine(current.getDescription());
-
+                    case "SEARCH" -> {
                         if (!current.hasItems()) {
-                            GameView.printLine("You search the room. Nothing of use turns up.");
+                            GameView.printLine("You search the room thoroughly. Nothing of use turns up.");
                         } else {
-                            GameView.printLine("Items in this room:");
+                            GameView.printLine("You search the room thoroughly. Something useful catches your eye:");
                             for (Item item : current.getItems()) {
                                 GameView.printLine("  - " + item.getName());
                             }
                         }
                     }
 
+                    case "LOOK" -> {
+                        GameView.printLine(current.getDescription());
+                    }
+
                     case "PICKUP", "TAKE", "GET" -> {
                         if (argument.isEmpty()) {
                             GameView.printLine("Specify an item name. Example: TAKE Keycard");
                         } else {
-                            player.pickupItem(current, argument);
+                            GameView.printLine(player.pickupItem(current, argument));
                         }
                     }
 
@@ -219,7 +231,7 @@ public class GameController {
                         if (argument.isEmpty()) {
                             GameView.printLine(current.getDescription());
                         } else {
-                            GameView.handleInspect(player, current, monsters, argument);
+                            handleInspectCommand(player, current, monsters, argument);
                         }
                     }
 
@@ -227,7 +239,7 @@ public class GameController {
                         if (argument.isEmpty()) {
                             GameView.printLine("Specify an item name. Example: DROP Keycard");
                         } else {
-                            player.dropItem(current, argument);
+                            GameView.printLine(player.dropItem(current, argument));
                         }
                     }
 
@@ -235,21 +247,23 @@ public class GameController {
                         if (argument.isEmpty()) {
                             GameView.printLine("Specify a weapon. Example: EQUIP Rusty Knife");
                         } else {
-                            player.equipWeapon(argument);
+                            GameView.printLine(player.equipWeapon(argument));
                         }
                     }
 
-                    case "UNEQUIP" -> player.unequipWeapon();
+                    case "UNEQUIP" -> GameView.printLine(player.unequipWeapon());
 
                     case "HEAL", "CONSUME" -> {
                         if (argument.isEmpty()) {
                             GameView.printLine("Specify an item. Example: HEAL Med Kit");
+                        } else if (player.getCurrentHealth() >= player.getMaxHealth()) {
+                            GameView.printLine("You are already at full health.");
                         } else {
-                            player.consumeHealingItem(argument);
+                            GameView.printLine(player.consumeHealingItem(argument));
                         }
                     }
 
-                    case "ATTACK" -> {
+                    case "ATTACK", "FIGHT" -> {
                         Monster monster = Monster.findActiveByRoomNumber(monsters, currentRoomNumber);
                         if (monster == null) {
                             GameView.printLine("There is no monster here.");
@@ -257,11 +271,20 @@ public class GameController {
                             boolean survived = handleCombat(monster, allItems, player, current, input);
                             if (!survived) {
                                 GameView.showGameOverMenu();
-                                running = promptGameOverChoice(input);
-                                if (running) {
+                                int gameOverChoice = promptGameOverChoice(input, player, rooms, puzzles, monsters,
+                                        allItems);
+
+                                if (gameOverChoice == 2) {
+                                    running = false;
+                                } else if (gameOverChoice == 1) {
                                     player.resetHealth();
+                                    running = true;
+                                    previousRoom = -1;
+                                } else {
+                                    running = true;
                                     previousRoom = -1;
                                 }
+
                                 justEnteredRoom = true;
                             }
                         }
@@ -314,12 +337,24 @@ public class GameController {
 
                     case "OBJECTIVE", "OBJ" -> GameView.printObjective(currentObjective, objectives);
 
-                    case "SAVE" -> SaveManager.saveGame(player, puzzles, monsters, allItems);
+                    case "SAVE" -> {
+                        if (SaveManager.saveGame(player, puzzles, monsters, allItems)) {
+                            GameView.printLine("Game saved.");
+                        } else {
+                            GameView.printLine("Could not save game.");
+                        }
+                    }
 
                     case "LOAD" -> {
-                        SaveManager.loadGame(player, rooms, puzzles, monsters, allItems);
-                        justEnteredRoom = true;
-                        previousRoom = -1;
+                        if (!SaveManager.hasSaveFile()) {
+                            GameView.printLine("No save file found.");
+                        } else if (SaveManager.loadGame(player, rooms, puzzles, monsters, allItems)) {
+                            GameView.printLine("Saved game loaded.");
+                            justEnteredRoom = true;
+                            previousRoom = -1;
+                        } else {
+                            GameView.printLine("Could not load save file.");
+                        }
                     }
 
                     case "Q", "QUIT", "EXIT" -> {
@@ -337,8 +372,7 @@ public class GameController {
             Scanner input) {
 
         GameView.printLine("");
-        GameView.printLine(puzzle.getDescription());
-        GameView.printLine("Type SOLVE to solve or IGNORE to ignore the puzzle.");
+        GameView.printPuzzleEncounterHeader(puzzle.getName(), puzzle.getDescription());
 
         while (true) {
             GameView.print("\nChoice: ");
@@ -357,7 +391,7 @@ public class GameController {
                 GameView.printLine(room.getDescription());
                 GameView.printLine(puzzle.getDescription());
             } else {
-                GameView.printLine("Unknown command. Type SOLVE to solve or IGNORE to ignore the puzzle.");
+                GameView.printLine("Unknown command. Type SOLVE to attempt or IGNORE to skip.");
             }
         }
     }
@@ -369,9 +403,8 @@ public class GameController {
 
         while (!puzzle.isSolved() && puzzle.hasAttemptsRemaining()) {
             GameView.printLine("");
-            GameView.printLine(puzzle.getDescription());
-            GameView.printLine("Attempts left: " + puzzle.getRemainingAttempts());
-            GameView.print("Enter answer or type IGNORE: ");
+            int attemptNumber = puzzle.getAllowedAttempts() - puzzle.getRemainingAttempts() + 1;
+            GameView.print("[Attempt " + attemptNumber + "/" + puzzle.getAllowedAttempts() + "] Answer: ");
 
             String answer = input.nextLine().trim();
 
@@ -403,13 +436,14 @@ public class GameController {
 
                 return true;
             } else {
-                GameView.printLine("That's not correct. Attempts remaining: " + puzzle.getRemainingAttempts());
+                GameView.printLine("That's not correct.");
             }
         }
 
         if (!puzzle.isSolved() && !puzzle.hasAttemptsRemaining()) {
-            GameView.printLine("You are out of attempts.");
-            GameView.printLine("You can attempt to solve it again by entering SOLVE or coming back to the room.");
+            GameView.printLine("");
+            GameView.printLine("That's not right. No attempts remaining.");
+            GameView.printLine("Come back or type SOLVE to try again.");
         }
 
         return false;
@@ -419,15 +453,21 @@ public class GameController {
             Scanner input) {
 
         GameView.printLine("");
-        GameView.printLine("! " + monster.getName().toUpperCase() + " HAS APPEARED !");
-        GameView.printLine(monster.getDescription());
-        GameView.printLine("Type ATTACK to fight or IGNORE to back away.");
+        GameView.printMonsterEncounterHeader(monster.getName(), monster.getDescription());
 
         while (true) {
             GameView.print("\nChoice: ");
-            String choice = input.nextLine().trim().toUpperCase();
+            String inputLine = input.nextLine().trim();
 
-            if (choice.equals("ATTACK")) {
+            if (inputLine.isEmpty()) {
+                continue;
+            }
+
+            String[] parts = inputLine.split(" ", 2);
+            String choice = parts[0].toUpperCase();
+            String arg = parts.length > 1 ? parts[1].trim() : "";
+
+            if (choice.equals("FIGHT")) {
                 return handleCombat(monster, allItems, player, room, input);
             }
 
@@ -437,8 +477,34 @@ public class GameController {
                 return true;
             }
 
+            if (choice.equals("INVENTORY") || choice.equals("INV")) {
+                GameView.displayInventory(player);
+                continue;
+            }
+
+            if (choice.equals("EQUIP")) {
+                if (arg.isEmpty()) {
+                    GameView.printLine("Specify a weapon. Example: EQUIP Rusty Knife");
+                } else {
+                    GameView.printLine(player.equipWeapon(arg));
+                }
+                continue;
+            }
+
+            if (choice.equals("HEAL")) {
+                if (arg.isEmpty()) {
+                    GameView.printLine("Specify an item. Example: HEAL Med Kit");
+                } else if (player.getCurrentHealth() >= player.getMaxHealth()) {
+                    GameView.printLine("You are already at full health.");
+                } else {
+                    GameView.printLine(player.consumeHealingItem(arg));
+                }
+                continue;
+            }
+
             if (choice.equals("HELP") || choice.equals("OBJ") || choice.equals("OBJECTIVE")) {
-                GameView.printLine("You must deal with the threat first. Type ATTACK to fight or IGNORE to back away.");
+                GameView.printLine("You must deal with the threat first. Type FIGHT to engage");
+                GameView.printLine("or IGNORE to back away.");
             } else {
                 GameView.printLine("Unknown command.");
             }
@@ -449,12 +515,11 @@ public class GameController {
             Scanner input) {
 
         GameView.printLine("");
-        GameView.printLine("--- COMBAT: " + monster.getName() + " ---");
+        GameView.printLine("Your HP: " + player.getCurrentHealth() + "/" + player.getMaxHealth()
+                + "  |  " + monster.getName() + " HP: " + monster.getCurrentHealth());
 
         while (!monster.isDead() && !player.isDead()) {
-            GameView.printLine("Your HP: " + player.getCurrentHealth() + "/" + player.getMaxHealth()
-                    + "  |  " + monster.getName() + " HP: " + monster.getCurrentHealth());
-            GameView.print("\nChoice (ATTACK / HEAL [item] / EQUIP [item] / UNEQUIP / INVENTORY): ");
+            GameView.printCombatCommandsPrompt();
 
             String line = input.nextLine().trim();
 
@@ -470,11 +535,13 @@ public class GameController {
                 case "ATTACK" -> {
                     int damage = player.getAttackDamage();
                     monster.takeDamage(damage);
-                    GameView.printLine("You deal " + damage + " damage. " + monster.getName() + " HP: "
-                            + monster.getCurrentHealth());
 
                     if (monster.isDead()) {
-                        GameView.printLine("You defeated the " + monster.getName() + "!");
+                        GameView.printLine("");
+                        GameView.printLine("You strike true. The " + monster.getName() + " is defeated.");
+                        GameView.printLine("Your HP: " + player.getCurrentHealth() + "/" + player.getMaxHealth()
+                                + "  |  " + monster.getName() + " HP: " + monster.getCurrentHealth());
+                        GameView.printLine("");
                         dropMonsterLoot(monster, allItems, room);
                         return true;
                     }
@@ -482,41 +549,56 @@ public class GameController {
                     int monsterDamage = monster.monsterAttack();
                     player.takeDamage(monsterDamage);
 
-                    GameView.printLine(monster.getName() + " attacks for " + monsterDamage
-                            + (monsterDamage > monster.getAttackDamage() ? " (critical!)" : "")
-                            + ". Your HP: " + player.getCurrentHealth());
+                    GameView.printLine("");
+                    if (monsterDamage > monster.getAttackDamage()) {
+                        GameView.printLine("The " + monster.getName() + " surges forward with unnatural speed!");
+                    } else {
+                        GameView.printLine("You lunge forward and strike. The " + monster.getName() + " recoils.");
+                    }
+                    GameView.printLine("Your HP: " + player.getCurrentHealth() + "/" + player.getMaxHealth()
+                            + "  |  " + monster.getName() + " HP: " + monster.getCurrentHealth());
+                    GameView.printLine("");
 
                     if (player.isDead()) {
-                        GameView.printLine("You have been defeated...");
+                        GameView.printLine("The " + monster.getName() + " overwhelms you. Everything goes dark.");
                         return false;
                     }
+                }
 
-                    GameView.printLine("");
+                case "FLEE" -> {
+                    monster.setIgnored();
+                    GameView.printLine("You retreat into the shadows. The " + monster.getName()
+                            + " does not follow.");
+                    return true;
                 }
 
                 case "HEAL" -> {
-                    player.consumeHealingItem(arg);
+                    GameView.printLine(player.consumeHealingItem(arg));
 
                     if (!player.isDead()) {
                         int monsterDamage = monster.monsterAttack();
                         player.takeDamage(monsterDamage);
 
-                        GameView.printLine(monster.getName() + " attacks for " + monsterDamage
-                                + (monsterDamage > monster.getAttackDamage() ? " (critical!)" : "")
-                                + ". Your HP: " + player.getCurrentHealth());
+                        GameView.printLine("");
+                        if (monsterDamage > monster.getAttackDamage()) {
+                            GameView.printLine("The " + monster.getName() + " surges forward with unnatural speed!");
+                        } else {
+                            GameView.printLine("You lunge forward and strike. The " + monster.getName() + " recoils.");
+                        }
+                        GameView.printLine("Your HP: " + player.getCurrentHealth() + "/" + player.getMaxHealth()
+                                + "  |  " + monster.getName() + " HP: " + monster.getCurrentHealth());
+                        GameView.printLine("");
 
                         if (player.isDead()) {
-                            GameView.printLine("You have been defeated...");
+                            GameView.printLine("The " + monster.getName() + " overwhelms you. Everything goes dark.");
                             return false;
                         }
-
-                        GameView.printLine("");
                     }
                 }
 
-                case "EQUIP" -> player.equipWeapon(arg);
+                case "EQUIP" -> GameView.printLine(player.equipWeapon(arg));
 
-                case "UNEQUIP" -> player.unequipWeapon();
+                case "UNEQUIP" -> GameView.printLine(player.unequipWeapon());
 
                 case "INVENTORY", "INV" -> GameView.displayInventory(player);
 
@@ -527,20 +609,38 @@ public class GameController {
         return !player.isDead();
     }
 
-    private static boolean promptGameOverChoice(Scanner input) {
+    private static int promptGameOverChoice(Scanner input, Player player, Map<Integer, Room> rooms,
+            Puzzle[] puzzles, Monster[] monsters, List<Item> allItems) {
         while (true) {
             GameView.print("\nChoice: ");
             String choice = input.nextLine().trim();
 
             if (choice.equals("1")) {
-                return true;
+                return 1;
             }
 
             if (choice.equals("2")) {
-                return false;
+                return 2;
             }
 
-            GameView.printLine("Enter 1 or 2.");
+            if (choice.equals("3")) {
+                if (!SaveManager.hasSaveFile()) {
+                    GameView.printLine("No save file found.");
+                    GameView.showGameOverMenu();
+                    continue;
+                }
+
+                if (SaveManager.loadGame(player, rooms, puzzles, monsters, allItems)) {
+                    GameView.printLine("Saved game loaded.");
+                    return 3;
+                }
+
+                GameView.printLine("Could not load save file.");
+                GameView.showGameOverMenu();
+                continue;
+            }
+
+            GameView.printLine("Enter 1, 2, or 3.");
         }
     }
 
@@ -558,9 +658,33 @@ public class GameController {
         }
     }
 
-    // -------------------------------------------------------------------------
+    private static void handleInspectCommand(Player player, Room room, Monster[] monsters, String target) {
+        Item roomItem = room.findItem(target);
+        if (roomItem != null) {
+            GameView.printLine(roomItem.getName() + ": " + roomItem.getDescription());
+            return;
+        }
+
+        Item invItem = player.getItemByName(target);
+        if (invItem != null) {
+            GameView.printLine(invItem.getName() + ": " + invItem.getDescription());
+            return;
+        }
+
+        Monster monster = Monster.findActiveByRoomNumber(monsters, room.getRoomNumber());
+        if (monster != null && monster.getName().equalsIgnoreCase(target)) {
+            GameView.printLine(monster.getName() + ": " + monster.getDescription());
+            GameView.printLine("Attack: " + monster.getAttackDamage() + " | HP: " + monster.getCurrentHealth() + "/"
+                    + monster.getMaxHealth());
+            return;
+        }
+
+        GameView.printLine("There is nothing like that to inspect here.");
+    }
+
+    // =========================================================================
     // File loaders
-    // -------------------------------------------------------------------------
+    // =========================================================================
 
     private static int advanceObjectiveTo(int newObjective, int currentObjective) {
         if (newObjective > currentObjective) {
@@ -570,281 +694,4 @@ public class GameController {
         return currentObjective;
     }
 
-    // Format: one objective per non-empty line, in order.
-    private static String[] loadObjectives(String fileName) {
-        File f = resolveDataFile(fileName);
-
-        if (!f.exists()) {
-            GameView.printLine("Warning: " + fileName + " not found.");
-            return new String[0];
-        }
-
-        List<String> objectives = new ArrayList<>();
-
-        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-            String line;
-
-            while ((line = br.readLine()) != null) {
-                line = line.trim();
-
-                if (line.isEmpty() || line.startsWith("#")) {
-                    continue;
-                }
-
-                objectives.add(line);
-            }
-        } catch (IOException e) {
-            GameView.printLine("Warning: Could not load objectives from " + fileName);
-            return new String[0];
-        }
-
-        return objectives.toArray(String[]::new);
-    }
-
-    private static File resolveDataFile(String fileName) {
-        File directFile = new File(fileName);
-
-        if (directFile.exists()) {
-            return directFile;
-        }
-
-        File projectFile = new File("TextAdventure-main", fileName);
-
-        if (projectFile.exists()) {
-            return projectFile;
-        }
-
-        File current = new File(System.getProperty("user.dir"));
-
-        while (current != null) {
-            File candidate = new File(current, fileName);
-
-            if (candidate.exists()) {
-                return candidate;
-            }
-
-            File nestedProjectFile = new File(current, "TextAdventure-main" + File.separator + fileName);
-
-            if (nestedProjectFile.exists()) {
-                return nestedProjectFile;
-            }
-
-            current = current.getParentFile();
-        }
-
-        return directFile;
-    }
-
-    // Format: roomNumber|name|description|north|east|south|west
-    // Optional lock line: LOCK|roomNumber|requiredItemName
-    private static boolean loadRooms(String fileName, Map<Integer, Room> rooms) {
-        File f = resolveDataFile(fileName);
-
-        if (!f.exists()) {
-            return false;
-        }
-
-        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-            String line;
-
-            while ((line = br.readLine()) != null) {
-                line = line.trim();
-
-                if (line.isEmpty() || line.startsWith("#")) {
-                    continue;
-                }
-
-                String[] parts = line.split("\\|", -1);
-
-                if (parts[0].trim().equalsIgnoreCase("LOCK")) {
-                    if (parts.length >= 3) {
-                        try {
-                            Room room = rooms.get(Integer.parseInt(parts[1].trim()));
-
-                            if (room != null) {
-                                room.setLocked(parts[2].trim());
-                            }
-                        } catch (NumberFormatException e) {
-                            // Ignore malformed lock rows.
-                        }
-                    }
-
-                    continue;
-                }
-
-                if (parts.length < 7) {
-                    continue;
-                }
-
-                try {
-                    int number = Integer.parseInt(parts[0].trim());
-                    String name = parts[1].trim();
-                    String desc = parts[2].trim();
-
-                    Room room = new Room(number, name, desc);
-                    room.addExit("N", Integer.parseInt(parts[3].trim()));
-                    room.addExit("E", Integer.parseInt(parts[4].trim()));
-                    room.addExit("S", Integer.parseInt(parts[5].trim()));
-                    room.addExit("W", Integer.parseInt(parts[6].trim()));
-
-                    rooms.put(number, room);
-                } catch (NumberFormatException e) {
-                    // Ignore malformed room rows.
-                }
-            }
-        } catch (IOException e) {
-            return false;
-        }
-
-        return !rooms.isEmpty();
-    }
-
-    // Format: name|description|type|attackBonus|healAmount|roomNumber
-    private static void loadItems(String fileName, Map<Integer, Room> rooms, List<Item> allItems) {
-        File f = resolveDataFile(fileName);
-
-        if (!f.exists()) {
-            GameView.printLine("Warning: " + fileName + " not found.");
-            return;
-        }
-
-        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-            String line;
-
-            while ((line = br.readLine()) != null) {
-                line = line.trim();
-
-                if (line.isEmpty() || line.startsWith("#")) {
-                    continue;
-                }
-
-                String[] parts = line.split("\\|", -1);
-
-                if (parts.length < 6) {
-                    continue;
-                }
-
-                try {
-                    String name = parts[0].trim();
-                    String description = parts[1].trim();
-                    String type = parts[2].trim();
-                    int attackBonus = Integer.parseInt(parts[3].trim());
-                    int healAmount = Integer.parseInt(parts[4].trim());
-                    int roomNumber = Integer.parseInt(parts[5].trim());
-
-                    Item item = new Item(name, description, type, attackBonus, healAmount, roomNumber);
-                    allItems.add(item);
-
-                    if (roomNumber > 0 && rooms.containsKey(roomNumber)) {
-                        rooms.get(roomNumber).addItem(item);
-                    }
-                } catch (NumberFormatException e) {
-                    // Ignore malformed item rows.
-                }
-            }
-        } catch (IOException e) {
-            GameView.printLine("Warning: Could not load items from " + fileName);
-        }
-    }
-
-    // Format:
-    // roomNumber|name|description|correctAnswer|successMessage|rewardItemName|allowedAttempts
-    private static Puzzle[] loadPuzzles(String fileName) {
-        File f = resolveDataFile(fileName);
-
-        if (!f.exists()) {
-            GameView.printLine("Warning: " + fileName + " not found.");
-            return new Puzzle[0];
-        }
-
-        Map<Integer, Puzzle> puzzleMap = new HashMap<>();
-
-        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-            String line;
-
-            while ((line = br.readLine()) != null) {
-                line = line.trim();
-
-                if (line.isEmpty() || line.startsWith("#")) {
-                    continue;
-                }
-
-                String[] parts = line.split("\\|", -1);
-
-                if (parts.length < 7) {
-                    continue;
-                }
-
-                try {
-                    int roomNumber = Integer.parseInt(parts[0].trim());
-                    String name = parts[1].trim();
-                    String description = parts[2].trim();
-                    String answer = parts[3].trim();
-                    String successMsg = parts[4].trim();
-                    String rewardItem = parts[5].trim();
-                    int attempts = Integer.parseInt(parts[6].trim());
-
-                    puzzleMap.put(roomNumber,
-                            new Puzzle(name, description, answer, successMsg, rewardItem, attempts, roomNumber));
-                } catch (NumberFormatException e) {
-                    // Ignore malformed puzzle rows.
-                }
-            }
-        } catch (IOException e) {
-            GameView.printLine("Warning: Could not load puzzles from " + fileName);
-            return new Puzzle[0];
-        }
-
-        return puzzleMap.values().toArray(Puzzle[]::new);
-    }
-
-    // Format:
-    // roomNumber|name|description|health|attackDamage|threshold|dropItemName
-    private static Monster[] loadMonsters(String fileName) {
-        File f = resolveDataFile(fileName);
-
-        if (!f.exists()) {
-            GameView.printLine("Warning: " + fileName + " not found.");
-            return new Monster[0];
-        }
-
-        List<Monster> list = new ArrayList<>();
-
-        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-            String line;
-
-            while ((line = br.readLine()) != null) {
-                line = line.trim();
-
-                if (line.isEmpty() || line.startsWith("#")) {
-                    continue;
-                }
-
-                String[] parts = line.split("\\|", -1);
-
-                if (parts.length < 7) {
-                    continue;
-                }
-
-                try {
-                    int roomNumber = Integer.parseInt(parts[0].trim());
-                    String name = parts[1].trim();
-                    String desc = parts[2].trim();
-                    int health = Integer.parseInt(parts[3].trim());
-                    int attack = Integer.parseInt(parts[4].trim());
-                    double threshold = Double.parseDouble(parts[5].trim());
-                    String dropItem = parts[6].trim();
-
-                    list.add(new Monster(name, desc, health, attack, threshold, dropItem, roomNumber));
-                } catch (NumberFormatException e) {
-                    // Ignore malformed monster rows.
-                }
-            }
-        } catch (IOException e) {
-            GameView.printLine("Warning: Could not load monsters from " + fileName);
-            return new Monster[0];
-        }
-
-        return list.toArray(Monster[]::new);
-    }
 }

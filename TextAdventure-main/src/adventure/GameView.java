@@ -35,7 +35,7 @@ public class GameView {
         System.out.println("Your goal: reach the top floor, uncover the truth, and");
         System.out.println("confront whatever is waiting in the Conservatory.");
         System.out.println();
-        System.out.println("Throughout the game, you can:");
+        System.out.println("During the game, you can:");
         System.out.println("- Type HELP for a list of possible commands.");
         System.out.println("- Type OBJ to view your current objective.");
         System.out.println();
@@ -54,13 +54,23 @@ public class GameView {
         printLine("Room " + room.getRoomNumber() + ": " + room.getName());
         printLine(room.getDescription());
         if (room.isVisited())
-            printLine("[Visited]");
+            printLine("This room looks familiar");
     }
 
     public static void displayRoomFooter(Room room) {
         String exits = room.getExits().isEmpty()
                 ? "None"
                 : room.getExits().keySet().stream()
+                        .sorted((a, b) -> {
+                            int aPriority = getExitSortPriority(a);
+                            int bPriority = getExitSortPriority(b);
+
+                            if (aPriority != bPriority) {
+                                return Integer.compare(aPriority, bPriority);
+                            }
+
+                            return a.compareToIgnoreCase(b);
+                        })
                         .map(dir -> switch (dir.toUpperCase()) {
                             case "N" -> "North";
                             case "E" -> "East";
@@ -71,20 +81,41 @@ public class GameView {
                         .reduce((a, b) -> a + ", " + b)
                         .orElse("None");
 
-        if (room.hasItems()) {
-            printLine("");
-            printLine(
-                    "Items: " + room.getItems().stream().map(Item::getName).reduce((a, b) -> a + ", " + b).orElse(""));
+        printLine("\nAvailable Exits: " + exits);
+        printLine("");
+        printLine("=== COMMANDS ===");
+        printLine("  N / E / S / W         OBJECTIVE / OBJ");
+        printLine("  SEARCH                TAKE [item]");
+        printLine("  INVENTORY / INV       HEALTH / HP");
+        printLine("  HELP");
+    }
+
+    public static void printCombatCommandsPrompt() {
+        printLine("=== COMMANDS ===");
+        printLine("  ATTACK               FLEE");
+        printLine("  HEAL [item]          EQUIP [item]");
+        printLine("  INVENTORY / INV");
+        printLine("");
+        print("Choice: ");
+    }
+
+    private static int getExitSortPriority(String direction) {
+        if (direction == null) {
+            return Integer.MAX_VALUE;
         }
 
-        printLine("");
-        printLine("Available Exits: " + exits);
-        printLine("Move with N/E/S/W. Type HELP for more.");
+        return switch (direction.trim().toUpperCase()) {
+            case "N" -> 0;
+            case "E" -> 1;
+            case "S" -> 2;
+            case "W" -> 3;
+            default -> Integer.MAX_VALUE;
+        };
     }
 
     public static void displayInventory(Player player) {
         printLine("");
-        printLine("--- Inventory ---");
+        printLine("=== Inventory ===");
         if (player.isInventoryEmpty()) {
             printLine("  (empty)");
         } else {
@@ -100,70 +131,62 @@ public class GameView {
 
     public static void printHelp() {
         printLine("");
-        printLine("--- Commands ---");
-        printLine("  Move: N/E/S/W");
-        printLine("  Look: LOOK or EXPLORE");
-        printLine("  Take: TAKE <item>");
-        printLine("  Drop: DROP <item>");
-        printLine("  Inspect: INSPECT <item>");
-        printLine("  Equip: EQUIP <item>");
-        printLine("  Unequip: UNEQUIP");
-        printLine("  Heal: HEAL <item>");
-        printLine("  Attack: ATTACK");
-        printLine("  Ignore: IGNORE");
-        printLine("  Solve: SOLVE");
-        printLine("  Objective: OBJECTIVE or OBJ");
-        printLine("  Exits: EXITS");
-        printLine("  Inventory: INVENTORY or INV");
-        printLine("  Health: HEALTH or HP");
-        printLine("  Save: SAVE");
-        printLine("  Load: LOAD");
-        printLine("  Help: HELP");
-        printLine("  Quit: QUIT or Q");
+        printLine("=== LIST OF POSSIBLE COMMANDS ===");
+        printLine("  Navigation:");
+        printLine("  N / E / S / W         Move between rooms");
+        printLine("  EXITS                 List available exits");
+        printLine("");
+        printLine("  Exploration:");
+        printLine("  SEARCH                Search the room for items");
+        printLine("  LOOK                  Reprint the room description");
+        printLine("  INSPECT [item]        Examine an item or monster");
+        printLine("");
+        printLine("  Items:");
+        printLine("  TAKE [item]           Pick up an item");
+        printLine("  DROP [item]           Drop an item from inventory");
+        printLine("  INVENTORY / INV       View your inventory");
+        printLine("  EQUIP [item]          Equip a weapon");
+        printLine("  UNEQUIP               Unequip current weapon");
+        printLine("  HEAL [item]           Use a consumable item");
+        printLine("");
+        printLine("  Combat:");
+        printLine("  FIGHT                 Engage an encountered monster");
+        printLine("  IGNORE                Back away from a monster");
+        printLine("");
+        printLine("  Puzzle:");
+        printLine("  SOLVE                 Attempt to solve a puzzle");
+        printLine("");
+        printLine("  Status:");
+        printLine("  HEALTH / HP           View current health");
+        printLine("  OBJECTIVE / OBJ       View current objective");
+        printLine("");
+        printLine("  Game:");
+        printLine("  SAVE                  Save your progress");
+        printLine("  LOAD                  Load your last save");
+        printLine("  HELP                  Show this list");
+        printLine("  QUIT / Q              Quit the game");
+        printLine("");
+        printLine("  Note: During monster encounters only FIGHT and IGNORE");
+        printLine("  are accepted. During combat only ATTACK, FLEE, HEAL,");
+        printLine("  EQUIP, UNEQUIP, and INV are accepted. During puzzles");
+        printLine("  only SOLVE and IGNORE are accepted — any other input");
+        printLine("  will count as a puzzle answer attempt.");
     }
 
     public static void printObjective(int currentObjective, String[] objectives) {
         printLine("");
         if (objectives == null || objectives.length == 0) {
-            printLine("No objective data available.");
-            printLine("");
+            printLine("Current Objective: No objective data available.");
             return;
         }
 
         int index = Math.max(0, Math.min(currentObjective, objectives.length - 1));
         String objective = objectives[index];
         if (objective == null || objective.isBlank()) {
-            printLine("No objective data available.");
+            printLine("Current Objective: No objective data available.");
         } else {
-            printLine(objective);
+            printLine("Current Objective: " + objective.trim());
         }
-    }
-
-    public static void handleInspect(Player player, Room room, Monster[] monsters, String target) {
-        // Check room items first
-        Item roomItem = room.findItem(target);
-        if (roomItem != null) {
-            printLine(roomItem.getName() + ": " + roomItem.getDescription());
-            return;
-        }
-
-        // Check inventory items
-        Item invItem = player.getItemByName(target);
-        if (invItem != null) {
-            printLine(invItem.getName() + ": " + invItem.getDescription());
-            return;
-        }
-
-        // Check for active monster in room
-        Monster monster = Monster.findActiveByRoomNumber(monsters, room.getRoomNumber());
-        if (monster != null && monster.getName().equalsIgnoreCase(target)) {
-            printLine(monster.getName() + ": " + monster.getDescription());
-            printLine("Attack: " + monster.getAttackDamage() + " | HP: " + monster.getCurrentHealth() + "/"
-                    + monster.getMaxHealth());
-            return;
-        }
-
-        printLine("There is nothing like that to inspect here.");
     }
 
     public static void showGameOverMenu() {
@@ -172,13 +195,27 @@ public class GameView {
         printLine("");
         printLine("=== GAME OVER ===");
         printLine("");
-        printLine("1. Respawn   2. Quit Game");
+        printLine("1. Respawn   2. Quit Game   3. Load Save");
         printLine("");
         printLine(DIVIDER);
     }
 
     public static void printMonsterDrop(String monsterName, String itemName) {
         printLine(monsterName + " dropped: " + itemName + ". Use TAKE to pick it up.");
+    }
+
+    public static void printMonsterEncounterHeader(String monsterName, String monsterDescription) {
+        printLine("=== ENCOUNTER: " + monsterName + " ===");
+        printLine(monsterDescription);
+        printLine("");
+        printLine("Type FIGHT to engage  |  Type IGNORE to back away");
+    }
+
+    public static void printPuzzleEncounterHeader(String puzzleName, String puzzleDescription) {
+        printLine("=== PUZZLE: " + puzzleName + " ===");
+        printLine(puzzleDescription);
+        printLine("");
+        printLine("Type SOLVE to attempt  |  Type IGNORE to skip");
     }
 
     public static void printVictorySequence() {

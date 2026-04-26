@@ -17,8 +17,8 @@ public class Puzzle {
     private boolean failedForThisSession;
 
     public Puzzle(String name, String description, String correctAnswer,
-                  String successMessage, String rewardItemName,
-                  int allowedAttempts, int roomNumber) {
+            String successMessage, String rewardItemName,
+            int allowedAttempts, int roomNumber) {
 
         this.name = name != null ? name.trim() : "";
         this.description = description != null ? description.trim() : "";
@@ -26,8 +26,8 @@ public class Puzzle {
         this.successMessage = successMessage != null ? successMessage.trim() : "";
         this.rewardItemName = rewardItemName != null ? rewardItemName.trim() : "";
 
-        // Always 5 attempts per solve session
-        this.allowedAttempts = 4;
+        // Use configured attempts per solve session
+        this.allowedAttempts = allowedAttempts;
         this.remainingAttempts = this.allowedAttempts;
 
         this.roomNumber = roomNumber;
@@ -117,14 +117,16 @@ public class Puzzle {
     }
 
     public boolean isCommandWord(String answer) {
-        if (answer == null) return false;
+        if (answer == null)
+            return false;
 
         String input = answer.trim().toLowerCase();
         return input.equals("ignore") || input.equals("solve") || input.equals("look");
     }
 
     public boolean matchesAnswer(String answer) {
-        if (isBlankAnswer(answer)) return false;
+        if (isBlankAnswer(answer))
+            return false;
         return answer.trim().equalsIgnoreCase(correctAnswer);
     }
 
@@ -133,7 +135,7 @@ public class Puzzle {
     // ========================
 
     public void startSolveSession() {
-        if (!solved) {
+        if (!solved && !failedForThisSession) {
             remainingAttempts = allowedAttempts;
             failedForThisSession = false;
         }
@@ -210,7 +212,8 @@ public class Puzzle {
 
     public static Puzzle findByRoomNumber(Puzzle[] puzzles, int roomNumber) {
 
-        if (puzzles == null) return null;
+        if (puzzles == null)
+            return null;
 
         for (Puzzle puzzle : puzzles) {
             if (puzzle != null && puzzle.getRoomNumber() == roomNumber) {
