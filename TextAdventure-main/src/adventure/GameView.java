@@ -218,28 +218,56 @@ public class GameView {
         printLine("Type SOLVE to attempt  |  Type IGNORE to skip");
     }
 
-    public static void printVictorySequence() {
+    public static void printFinalVerdictPrompt() {
+        printLine("");
+        printLine("Based on your investigation, do you find Mrs. Blackwood guilty?");
+        printLine("");
+        printLine("Type GUILTY to convict | Type NOT GUILTY to acquit");
+    }
+
+    public static void printVictorySequence(boolean guiltyVerdict) {
         printLine("");
         printLine(DIVIDER);
         printLine("");
         printLine("=== CASE CLOSED ===");
         printLine("");
-        printLine("Mrs. Blackwood turns slowly, still and composed.");
-        printLine("Her smile fades when you read the case record aloud:");
-        printLine("the missing guests were never random victims, but");
-        printLine("witnesses she lured into the mansion's staged riddles.");
+        if (guiltyVerdict) {
+            printLine("Mrs. Blackwood goes still.");
+            printLine("You read the case record aloud, and the composure drains from her face.");
+            printLine("The guests were never random victims. They were witnesses,");
+            printLine("lured in and silenced. Every puzzle, every locked room, every");
+            printLine("planted clue was a stage she built to bury the truth.");
+            printLine("");
+            printLine("You present the final sequence. The signed file.");
+            printLine("The Conservatory doors unlock. The house goes quiet.");
+            printLine("");
+            printLine("By morning, the police have enough to reopen every closed report.");
+            printLine("Eleanor Blackwood does not leave the estate a free woman.");
+            printLine("");
+            printLine("The portraits are just portraits now. The rooms are just rooms.");
+            printLine("The Blackwood mystery is finally solved.");
+        } else {
+            printLine("Mrs. Blackwood goes still.");
+            printLine("Your hesitation fills the Conservatory.");
+            printLine("You read the case record aloud. She gives a deceptive smile.");
+            printLine("");
+            printLine("The doors unlock. The house exhales.");
+            printLine("And then the disappearances continue.");
+            printLine("");
+            printLine("Another guest. Then another. The police search, and the trail");
+            printLine("folds back into the same dark walls every time.");
+            printLine("");
+            printLine("Without a conviction, the mystery outlives your investigation.");
+            printLine("Blackwood Mansion keeps its secrets.");
+        }
         printLine("");
-        printLine("Each puzzle, each locked room, and each planted clue");
-        printLine("pointed to one truth: Blackwood engineered a theater of");
-        printLine("fear to erase anyone who uncovered her crimes.");
-        printLine("");
-        printLine("When you present the final sequence and the signed file,");
-        printLine("the Conservatory doors unlock and the house falls silent.");
-        printLine("By dawn, the police return with enough evidence to reopen");
-        printLine("every closed report and arrest Eleanor Blackwood.");
-        printLine("");
-        printLine("You leave the mansion as the first light breaks over the");
-        printLine("glass roof. The Blackwood mystery is finally solved.");
+        if (guiltyVerdict) {
+            printLine("You walk out as dawn breaks through the glass roof.");
+            printLine("The Blackwood mystery is finally over.");
+        } else {
+            printLine("You walk out as dawn breaks through the glass roof.");
+            printLine("The Blackwood mystery is never solved.");
+        }
         printLine("");
         printLine(DIVIDER);
     }

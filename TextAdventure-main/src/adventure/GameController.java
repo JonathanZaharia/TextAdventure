@@ -155,7 +155,8 @@ public class GameController {
                     }
 
                     if (currentRoomNumber == 20) {
-                        GameView.printVictorySequence();
+                        boolean guiltyVerdict = promptFinalVerdict(input);
+                        GameView.printVictorySequence(guiltyVerdict);
                         running = false;
                         continue;
                     }
@@ -447,6 +448,24 @@ public class GameController {
         }
 
         return false;
+    }
+
+    private static boolean promptFinalVerdict(Scanner input) {
+        while (true) {
+            GameView.printFinalVerdictPrompt();
+            GameView.print("\nChoice: ");
+
+            String choice = input.nextLine().trim().toUpperCase();
+            if (choice.equals("GUILTY")) {
+                return true;
+            }
+
+            if (choice.equals("NOT GUILTY")) {
+                return false;
+            }
+
+            GameView.printLine("Please type GUILTY or NOT GUILTY.");
+        }
     }
 
     private static boolean handleMonsterEncounter(Monster monster, List<Item> allItems, Player player, Room room,
