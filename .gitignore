@@ -1,0 +1,5 @@
+# Java build output
+TextAdventure-main/bin/
+
+# Compiled class files
+*.class

@@ -59,18 +59,18 @@ public class GameController {
                     }
                     case "2" -> {
                         if (!SaveManager.hasSaveFile()) {
-                            GameView.printLine("No save file found.");
+                            GameView.printLine("\n=== ERROR: No save file found. ===");
                         } else {
                             if (SaveManager.loadGame(player, rooms, puzzles, monsters, allItems)) {
-                                GameView.printLine("Saved game loaded.");
+                                GameView.printLine("\n=== Saved game loaded. ===");
                                 started = true;
                             } else {
-                                GameView.printLine("Could not load save file.");
+                                GameView.printLine("\n=== ERROR: Could not load save file. ===");
                             }
                         }
                     }
                     case "3" -> {
-                        GameView.printLine("Thanks for playing!");
+                        GameView.printLine("\n=== Thanks for playing! ===");
                         return;
                     }
                     default -> GameView.printLine("Enter 1, 2, or 3.");
@@ -125,10 +125,12 @@ public class GameController {
                             if (gameOverChoice == 2) {
                                 running = false;
                             } else if (gameOverChoice == 1) {
+                                GameView.printLine("\n=== Respawning... ===");
                                 player.resetHealth();
                                 running = true;
                                 previousRoom = -1;
                             } else {
+                                GameView.printLine("\n=== Saved game loaded. ===");
                                 running = true;
                                 previousRoom = -1;
                             }
@@ -191,7 +193,7 @@ public class GameController {
                                 if (dest.canPlayerEnter(player)) {
                                     String keyName = dest.getRequiredItemName();
                                     dest.unlock();
-                                    GameView.printLine("You use the " + keyName + " to unlock the door.");
+                                    GameView.printLine("\n=== You use the " + keyName + " to unlock the door. ===");
                                     player.removeItemByName(keyName);
                                     player.setCurrentRoomNumber(exitDest);
                                     justEnteredRoom = true;
@@ -224,7 +226,8 @@ public class GameController {
                         if (argument.isEmpty()) {
                             GameView.printLine("Specify an item name. Example: TAKE Keycard");
                         } else {
-                            GameView.printLine(player.pickupItem(current, argument));
+                            Player.PickupResult result = player.pickupItem(current, argument);
+                            GameView.printPickupResult(result, argument, true);
                         }
                     }
 
@@ -240,7 +243,8 @@ public class GameController {
                         if (argument.isEmpty()) {
                             GameView.printLine("Specify an item name. Example: DROP Keycard");
                         } else {
-                            GameView.printLine(player.dropItem(current, argument));
+                            Player.DropResult result = player.dropItem(current, argument);
+                            GameView.printDropResult(result, argument, current, true);
                         }
                     }
 
@@ -248,19 +252,23 @@ public class GameController {
                         if (argument.isEmpty()) {
                             GameView.printLine("Specify a weapon. Example: EQUIP Rusty Knife");
                         } else {
-                            GameView.printLine(player.equipWeapon(argument));
+                            Player.EquipResult result = player.equipWeapon(argument);
+                            GameView.printEquipResult(result, argument, true);
                         }
                     }
 
-                    case "UNEQUIP" -> GameView.printLine(player.unequipWeapon());
+                    case "UNEQUIP" -> {
+                        Player.UnequipResult result = player.unequipWeapon();
+                        GameView.printUnequipResult(result, true);
+                    }
 
                     case "HEAL", "CONSUME" -> {
                         if (argument.isEmpty()) {
                             GameView.printLine("Specify an item. Example: HEAL Med Kit");
-                        } else if (player.getCurrentHealth() >= player.getMaxHealth()) {
-                            GameView.printLine("You are already at full health.");
                         } else {
-                            GameView.printLine(player.consumeHealingItem(argument));
+                            Player.ConsumeResult result = player.consumeHealingItem(argument);
+                            boolean banner = result.getStatus() != Player.ConsumeStatus.FULL_HEALTH;
+                            GameView.printConsumeResult(result, argument, banner);
                         }
                     }
 
@@ -278,10 +286,12 @@ public class GameController {
                                 if (gameOverChoice == 2) {
                                     running = false;
                                 } else if (gameOverChoice == 1) {
+                                    GameView.printLine("\n=== Respawning... ===");
                                     player.resetHealth();
                                     running = true;
                                     previousRoom = -1;
                                 } else {
+                                    GameView.printLine("\n=== Saved game loaded. ===");
                                     running = true;
                                     previousRoom = -1;
                                 }
@@ -340,7 +350,7 @@ public class GameController {
 
                     case "SAVE" -> {
                         if (SaveManager.saveGame(player, puzzles, monsters, allItems)) {
-                            GameView.printLine("Game saved.");
+                            GameView.printLine("\n=== Game saved. ===");
                         } else {
                             GameView.printLine("Could not save game.");
                         }
@@ -350,7 +360,7 @@ public class GameController {
                         if (!SaveManager.hasSaveFile()) {
                             GameView.printLine("No save file found.");
                         } else if (SaveManager.loadGame(player, rooms, puzzles, monsters, allItems)) {
-                            GameView.printLine("Saved game loaded.");
+                            GameView.printLine("\n=== Saved game loaded. ===");
                             justEnteredRoom = true;
                             previousRoom = -1;
                         } else {
@@ -360,7 +370,7 @@ public class GameController {
 
                     case "Q", "QUIT", "EXIT" -> {
                         running = false;
-                        GameView.printLine("Thanks for playing!");
+                        GameView.printLine("\n=== Thanks for playing! ===");
                     }
 
                     default -> GameView.printLine("Unknown command. Type HELP for commands.");
@@ -420,6 +430,11 @@ public class GameController {
                 continue;
             }
 
+            if (answer.equalsIgnoreCase("SOLVE")) {
+                GameView.printLine("That's not correct.");
+                continue;
+            }
+
             if (answer.isEmpty()) {
                 GameView.printLine("Please enter an answer or type IGNORE.");
                 continue;
@@ -432,7 +447,7 @@ public class GameController {
 
                 Item reward = puzzle.grantReward(player, allItems);
                 if (reward != null) {
-                    GameView.printLine("You received: " + reward.getName());
+                    GameView.printLine("\n=== You received: " + reward.getName() + " ===");
                 }
 
                 return true;
@@ -444,7 +459,7 @@ public class GameController {
         if (!puzzle.isSolved() && !puzzle.hasAttemptsRemaining()) {
             GameView.printLine("");
             GameView.printLine("That's not right. No attempts remaining.");
-            GameView.printLine("Come back or type SOLVE to try again.");
+            GameView.printLine("Come back to the room to try again.");
         }
 
         return false;
@@ -505,7 +520,8 @@ public class GameController {
                 if (arg.isEmpty()) {
                     GameView.printLine("Specify a weapon. Example: EQUIP Rusty Knife");
                 } else {
-                    GameView.printLine(player.equipWeapon(arg));
+                    Player.EquipResult result = player.equipWeapon(arg);
+                    GameView.printEquipResult(result, arg, false);
                 }
                 continue;
             }
@@ -513,10 +529,9 @@ public class GameController {
             if (choice.equals("HEAL")) {
                 if (arg.isEmpty()) {
                     GameView.printLine("Specify an item. Example: HEAL Med Kit");
-                } else if (player.getCurrentHealth() >= player.getMaxHealth()) {
-                    GameView.printLine("You are already at full health.");
                 } else {
-                    GameView.printLine(player.consumeHealingItem(arg));
+                    Player.ConsumeResult result = player.consumeHealingItem(arg);
+                    GameView.printConsumeResult(result, arg, false);
                 }
                 continue;
             }
@@ -557,7 +572,7 @@ public class GameController {
 
                     if (monster.isDead()) {
                         GameView.printLine("");
-                        GameView.printLine("You strike true. The " + monster.getName() + " is defeated.");
+                        GameView.printLine("=== You strike true. The " + monster.getName() + " is defeated. ===");
                         GameView.printLine("Your HP: " + player.getCurrentHealth() + "/" + player.getMaxHealth()
                                 + "  |  " + monster.getName() + " HP: " + monster.getCurrentHealth());
                         GameView.printLine("");
@@ -579,20 +594,22 @@ public class GameController {
                     GameView.printLine("");
 
                     if (player.isDead()) {
-                        GameView.printLine("The " + monster.getName() + " overwhelms you. Everything goes dark.");
+                        GameView.printLine(
+                                "=== The " + monster.getName() + " overwhelms you. Everything goes dark. ===");
                         return false;
                     }
                 }
 
                 case "FLEE" -> {
                     monster.setIgnored();
-                    GameView.printLine("You retreat into the shadows. The " + monster.getName()
-                            + " does not follow.");
+                    GameView.printLine("\n=== You retreat into the shadows. The " + monster.getName()
+                            + " does not follow. ===");
                     return true;
                 }
 
                 case "HEAL" -> {
-                    GameView.printLine(player.consumeHealingItem(arg));
+                    Player.ConsumeResult result = player.consumeHealingItem(arg);
+                    GameView.printConsumeResult(result, arg, true);
 
                     if (!player.isDead()) {
                         int monsterDamage = monster.monsterAttack();
@@ -609,15 +626,22 @@ public class GameController {
                         GameView.printLine("");
 
                         if (player.isDead()) {
-                            GameView.printLine("The " + monster.getName() + " overwhelms you. Everything goes dark.");
+                            GameView.printLine(
+                                    "=== The " + monster.getName() + " overwhelms you. Everything goes dark. ===");
                             return false;
                         }
                     }
                 }
 
-                case "EQUIP" -> GameView.printLine(player.equipWeapon(arg));
+                case "EQUIP" -> {
+                    Player.EquipResult result = player.equipWeapon(arg);
+                    GameView.printEquipResult(result, arg, true);
+                }
 
-                case "UNEQUIP" -> GameView.printLine(player.unequipWeapon());
+                case "UNEQUIP" -> {
+                    Player.UnequipResult result = player.unequipWeapon();
+                    GameView.printUnequipResult(result, false);
+                }
 
                 case "INVENTORY", "INV" -> GameView.displayInventory(player);
 
@@ -644,17 +668,17 @@ public class GameController {
 
             if (choice.equals("3")) {
                 if (!SaveManager.hasSaveFile()) {
-                    GameView.printLine("No save file found.");
+                    GameView.printLine("\n=== ERROR: No save file found. ===");
                     GameView.showGameOverMenu();
                     continue;
                 }
 
                 if (SaveManager.loadGame(player, rooms, puzzles, monsters, allItems)) {
-                    GameView.printLine("Saved game loaded.");
+                    GameView.printLine("\n=== Saved game loaded. ===");
                     return 3;
                 }
 
-                GameView.printLine("Could not load save file.");
+                GameView.printLine("\n=== ERROR: Could not load save file. ===");
                 GameView.showGameOverMenu();
                 continue;
             }

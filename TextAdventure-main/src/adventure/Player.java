@@ -145,7 +145,7 @@ public class Player {
     }
 
     public List<Item> getInventory() {
-        return inventory;
+        return List.copyOf(inventory);
     }
 
     public boolean isInventoryEmpty() {
@@ -157,63 +157,314 @@ public class Player {
         equippedItem = null;
     }
 
-    public String pickupItem(Room room, String itemName) {
+    // ========================
+    // PLAYER ACTION RESULTS
+    // ========================
+
+    public enum PickupStatus {
+        PICKED_UP,
+        ITEM_NOT_FOUND
+    }
+
+    public static final class PickupResult {
+        private final PickupStatus status;
+        private final Item item;
+
+        private PickupResult(PickupStatus status, Item item) {
+            this.status = status;
+            this.item = item;
+        }
+
+        public static PickupResult pickedUp(Item item) {
+            return new PickupResult(PickupStatus.PICKED_UP, item);
+        }
+
+        public static PickupResult itemNotFound() {
+            return new PickupResult(PickupStatus.ITEM_NOT_FOUND, null);
+        }
+
+        public PickupStatus getStatus() {
+            return status;
+        }
+
+        public Item getItem() {
+            return item;
+        }
+
+        public boolean isSuccess() {
+            return status == PickupStatus.PICKED_UP;
+        }
+    }
+
+    public enum DropStatus {
+        DROPPED,
+        NOT_OWNED
+    }
+
+    public static final class DropResult {
+        private final DropStatus status;
+        private final Item item;
+
+        private DropResult(DropStatus status, Item item) {
+            this.status = status;
+            this.item = item;
+        }
+
+        public static DropResult dropped(Item item) {
+            return new DropResult(DropStatus.DROPPED, item);
+        }
+
+        public static DropResult notOwned() {
+            return new DropResult(DropStatus.NOT_OWNED, null);
+        }
+
+        public DropStatus getStatus() {
+            return status;
+        }
+
+        public Item getItem() {
+            return item;
+        }
+
+        public boolean isSuccess() {
+            return status == DropStatus.DROPPED;
+        }
+    }
+
+    public enum EquipStatus {
+        EQUIPPED,
+        NOT_OWNED,
+        NOT_WEAPON
+    }
+
+    public static final class EquipResult {
+        private final EquipStatus status;
+        private final Item item;
+        private final int attackDamageAfter;
+
+        private EquipResult(EquipStatus status, Item item, int attackDamageAfter) {
+            this.status = status;
+            this.item = item;
+            this.attackDamageAfter = attackDamageAfter;
+        }
+
+        public static EquipResult equipped(Item item, int attackDamageAfter) {
+            return new EquipResult(EquipStatus.EQUIPPED, item, attackDamageAfter);
+        }
+
+        public static EquipResult notOwned() {
+            return new EquipResult(EquipStatus.NOT_OWNED, null, -1);
+        }
+
+        public static EquipResult notWeapon(Item item) {
+            return new EquipResult(EquipStatus.NOT_WEAPON, item, -1);
+        }
+
+        public EquipStatus getStatus() {
+            return status;
+        }
+
+        public Item getItem() {
+            return item;
+        }
+
+        public int getAttackDamageAfter() {
+            return attackDamageAfter;
+        }
+
+        public boolean isSuccess() {
+            return status == EquipStatus.EQUIPPED;
+        }
+    }
+
+    public enum UnequipStatus {
+        UNEQUIPPED,
+        NOTHING_EQUIPPED
+    }
+
+    public static final class UnequipResult {
+        private final UnequipStatus status;
+        private final Item item;
+        private final int attackDamageAfter;
+
+        private UnequipResult(UnequipStatus status, Item item, int attackDamageAfter) {
+            this.status = status;
+            this.item = item;
+            this.attackDamageAfter = attackDamageAfter;
+        }
+
+        public static UnequipResult unequipped(Item item, int attackDamageAfter) {
+            return new UnequipResult(UnequipStatus.UNEQUIPPED, item, attackDamageAfter);
+        }
+
+        public static UnequipResult nothingEquipped(int attackDamageAfter) {
+            return new UnequipResult(UnequipStatus.NOTHING_EQUIPPED, null, attackDamageAfter);
+        }
+
+        public UnequipStatus getStatus() {
+            return status;
+        }
+
+        public Item getItem() {
+            return item;
+        }
+
+        public int getAttackDamageAfter() {
+            return attackDamageAfter;
+        }
+    }
+
+    public enum ConsumeStatus {
+        CONSUMED,
+        FULL_HEALTH,
+        NOT_OWNED,
+        NOT_CONSUMABLE
+    }
+
+    public static final class ConsumeResult {
+        private final ConsumeStatus status;
+        private final Item item;
+        private final int restoredAmount;
+        private final int healthAfter;
+        private final int maxHealth;
+
+        private ConsumeResult(ConsumeStatus status, Item item,
+                int restoredAmount, int healthAfter, int maxHealth) {
+            this.status = status;
+            this.item = item;
+            this.restoredAmount = restoredAmount;
+            this.healthAfter = healthAfter;
+            this.maxHealth = maxHealth;
+        }
+
+        public static ConsumeResult consumed(Item item, int restoredAmount, int healthAfter, int maxHealth) {
+            return new ConsumeResult(ConsumeStatus.CONSUMED, item, restoredAmount, healthAfter, maxHealth);
+        }
+
+        public static ConsumeResult fullHealth(int healthAfter, int maxHealth) {
+            return new ConsumeResult(ConsumeStatus.FULL_HEALTH, null, 0, healthAfter, maxHealth);
+        }
+
+        public static ConsumeResult notOwned(int healthAfter, int maxHealth) {
+            return new ConsumeResult(ConsumeStatus.NOT_OWNED, null, 0, healthAfter, maxHealth);
+        }
+
+        public static ConsumeResult notConsumable(Item item, int healthAfter, int maxHealth) {
+            return new ConsumeResult(ConsumeStatus.NOT_CONSUMABLE, item, 0, healthAfter, maxHealth);
+        }
+
+        public ConsumeStatus getStatus() {
+            return status;
+        }
+
+        public Item getItem() {
+            return item;
+        }
+
+        public int getRestoredAmount() {
+            return restoredAmount;
+        }
+
+        public int getHealthAfter() {
+            return healthAfter;
+        }
+
+        public int getMaxHealth() {
+            return maxHealth;
+        }
+
+        public boolean isSuccess() {
+            return status == ConsumeStatus.CONSUMED;
+        }
+    }
+
+    // ========================
+    // ACTIONS (NO UI STRINGS)
+    // ========================
+
+    public PickupResult pickupItem(Room room, String itemName) {
+        if (room == null || itemName == null || itemName.trim().isEmpty()) {
+            return PickupResult.itemNotFound();
+        }
+
         Item item = room.findItem(itemName);
         if (item == null) {
-            return "There is no item called '" + itemName + "' here.";
+            return PickupResult.itemNotFound();
         }
+
         addItem(item);
         item.moveToInventory();
         room.removeItem(item);
-        return item.getName() + " added to inventory.";
+        return PickupResult.pickedUp(item);
     }
 
-    public String dropItem(Room room, String itemName) {
+    public DropResult dropItem(Room room, String itemName) {
+        if (room == null || itemName == null || itemName.trim().isEmpty()) {
+            return DropResult.notOwned();
+        }
+
         Item item = removeItemByName(itemName);
         if (item == null) {
-            return "You do not have '" + itemName + "' in your inventory.";
+            return DropResult.notOwned();
         }
+
         room.addItem(item);
         item.moveToRoom(room.getRoomNumber());
-        return item.getName() + " dropped in " + room.getName() + ".";
+        return DropResult.dropped(item);
     }
 
-    public String equipWeapon(String itemName) {
+    public EquipResult equipWeapon(String itemName) {
+        if (itemName == null || itemName.trim().isEmpty()) {
+            return EquipResult.notOwned();
+        }
+
         Item item = getItemByName(itemName);
         if (item == null) {
-            return "You do not have '" + itemName + "'.";
+            return EquipResult.notOwned();
         }
+
+        if (!item.isWeapon()) {
+            return EquipResult.notWeapon(item);
+        }
+
         if (!equipItem(item)) {
-            return item.getName() + " cannot be equipped - it is not a weapon.";
+            return EquipResult.notWeapon(item);
         }
-        return item.getName() + " equipped. Attack: " + getAttackDamage();
+
+        return EquipResult.equipped(item, getAttackDamage());
     }
 
-    public String unequipWeapon() {
+    public UnequipResult unequipWeapon() {
         Item previous = unequipItem();
+        int attackAfter = getAttackDamage();
         if (previous == null) {
-            return "Nothing is equipped.";
+            return UnequipResult.nothingEquipped(attackAfter);
         }
-        return previous.getName() + " unequipped. Attack: " + getAttackDamage();
+        return UnequipResult.unequipped(previous, attackAfter);
     }
 
-    public String consumeHealingItem(String itemName) {
+    public ConsumeResult consumeHealingItem(String itemName) {
         if (currentHealth >= maxHealth) {
-            return "You are already at full health.";
+            return ConsumeResult.fullHealth(currentHealth, maxHealth);
+        }
+
+        if (itemName == null || itemName.trim().isEmpty()) {
+            return ConsumeResult.notOwned(currentHealth, maxHealth);
         }
 
         Item item = getItemByName(itemName);
         if (item == null) {
-            return "You do not have '" + itemName + "'.";
+            return ConsumeResult.notOwned(currentHealth, maxHealth);
         }
+
         if (!item.isConsumable()) {
-            return item.getName() + " cannot be consumed.";
+            return ConsumeResult.notConsumable(item, currentHealth, maxHealth);
         }
-        int before = getCurrentHealth();
+
+        int before = currentHealth;
         heal(item.getHealAmount());
         removeItem(item);
-        return "Used " + item.getName() + ". Restored "
-                + (getCurrentHealth() - before) + " HP. Health: "
-                + getCurrentHealth() + "/" + getMaxHealth();
+        int restored = currentHealth - before;
+        return ConsumeResult.consumed(item, restored, currentHealth, maxHealth);
     }
 }

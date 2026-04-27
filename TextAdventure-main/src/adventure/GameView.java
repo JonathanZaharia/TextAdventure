@@ -129,6 +129,84 @@ public class GameView {
                 + "  |  Attack: " + player.getAttackDamage());
     }
 
+    // ========================
+    // PLAYER ACTION MESSAGES
+    // ========================
+
+    public static void printPickupResult(Player.PickupResult result, String requestedItemName, boolean banner) {
+        if (result != null && result.isSuccess() && result.getItem() != null) {
+            printActionMessage(result.getItem().getName() + " added to inventory.", banner);
+            return;
+        }
+
+        printActionMessage("There is no item called '" + requestedItemName + "' here.", banner);
+    }
+
+    public static void printDropResult(Player.DropResult result, String requestedItemName, Room room, boolean banner) {
+        if (result != null && result.isSuccess() && result.getItem() != null && room != null) {
+            printActionMessage(result.getItem().getName() + " dropped in " + room.getName() + ".", banner);
+            return;
+        }
+
+        printActionMessage("You do not have '" + requestedItemName + "' in your inventory.", banner);
+    }
+
+    public static void printEquipResult(Player.EquipResult result, String requestedItemName, boolean banner) {
+        if (result == null) {
+            printActionMessage("You do not have '" + requestedItemName + "'.", banner);
+            return;
+        }
+
+        switch (result.getStatus()) {
+            case EQUIPPED ->
+                printActionMessage(result.getItem().getName() + " equipped. Attack: " + result.getAttackDamageAfter(),
+                        banner);
+            case NOT_WEAPON ->
+                printActionMessage(result.getItem().getName() + " cannot be equipped - it is not a weapon.", banner);
+            case NOT_OWNED ->
+                printActionMessage("You do not have '" + requestedItemName + "'.", banner);
+        }
+    }
+
+    public static void printUnequipResult(Player.UnequipResult result, boolean banner) {
+        if (result == null) {
+            printActionMessage("Nothing is equipped.", banner);
+            return;
+        }
+
+        switch (result.getStatus()) {
+            case NOTHING_EQUIPPED -> printActionMessage("Nothing is equipped.", banner);
+            case UNEQUIPPED -> printActionMessage(
+                    result.getItem().getName() + " unequipped. Attack: " + result.getAttackDamageAfter(), banner);
+        }
+    }
+
+    public static void printConsumeResult(Player.ConsumeResult result, String requestedItemName, boolean banner) {
+        if (result == null) {
+            printActionMessage("You do not have '" + requestedItemName + "'.", banner);
+            return;
+        }
+
+        switch (result.getStatus()) {
+            case FULL_HEALTH -> printActionMessage("You are already at full health.", banner);
+            case NOT_OWNED -> printActionMessage("You do not have '" + requestedItemName + "'.", banner);
+            case NOT_CONSUMABLE -> printActionMessage(result.getItem().getName() + " cannot be consumed.", banner);
+            case CONSUMED -> printActionMessage(
+                    "Used " + result.getItem().getName() + ". Restored "
+                            + result.getRestoredAmount() + " HP. Health: "
+                            + result.getHealthAfter() + "/" + result.getMaxHealth(),
+                    banner);
+        }
+    }
+
+    private static void printActionMessage(String message, boolean banner) {
+        if (banner) {
+            printLine("\n=== " + message + " ===");
+        } else {
+            printLine(message);
+        }
+    }
+
     public static void printHelp() {
         printLine("");
         printLine("=== LIST OF POSSIBLE COMMANDS ===");
@@ -201,7 +279,8 @@ public class GameView {
     }
 
     public static void printMonsterDrop(String monsterName, String itemName) {
-        printLine(monsterName + " dropped: " + itemName + ". Use TAKE to pick it up.");
+        printLine("\n=== " + monsterName + " dropped: " + itemName + " ===");
+        printLine("Use TAKE to pick it up.");
     }
 
     public static void printMonsterEncounterHeader(String monsterName, String monsterDescription) {

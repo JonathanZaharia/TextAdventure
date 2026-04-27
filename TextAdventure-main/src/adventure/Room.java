@@ -125,6 +125,10 @@ public class Room {
     }
 
     public List<Item> getItems() {
-        return items;
+        return List.copyOf(items);
+    }
+
+    public void clearItems() {
+        items.clear();
     }
 }

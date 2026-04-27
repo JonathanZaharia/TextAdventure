@@ -116,14 +116,6 @@ public class Puzzle {
         return answer == null || answer.trim().isEmpty();
     }
 
-    public boolean isCommandWord(String answer) {
-        if (answer == null)
-            return false;
-
-        String input = answer.trim().toLowerCase();
-        return input.equals("ignore") || input.equals("solve") || input.equals("look");
-    }
-
     public boolean matchesAnswer(String answer) {
         if (isBlankAnswer(answer))
             return false;
@@ -147,7 +139,7 @@ public class Puzzle {
             return false;
         }
 
-        if (isBlankAnswer(answer) || isCommandWord(answer)) {
+        if (isBlankAnswer(answer)) {
             return false;
         }
 

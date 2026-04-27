@@ -157,7 +157,7 @@ public class SaveManager {
         player.clearInventory();
 
         for (Room room : rooms.values()) {
-            room.getItems().clear();
+            room.clearItems();
         }
 
         for (Item item : allItems) {
