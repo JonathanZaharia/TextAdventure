@@ -3,7 +3,7 @@
 
 # Floor 1
 1|Grand Foyer|A tall chandelier hangs above a dusty marble floor. A large portrait of Mrs. Blackwood watches from the wall.|2|5|0|3
-2|Living Room|A fireplace crackles beside scattered books and a leather armchair. A dusty bookshelf stands beside it with a hollow book sticking out with the numbers "4510" scratched into its spine.|4|0|1|0
+2|Living Room|A fireplace crackles beside scattered books and a leather armchair. A dusty bookshelf stands beside it with a hollow book titled 'Pantry' sticking out with the numbers '4510' scratched into its spine.|4|0|1|0
 3|Study|A wooden desk sits in the center. A locked drawer with a word input mechanism sits in the corner of the room.|6|1|0|0
 4|Library|Tall shelves stretch floor to ceiling. Dust floats in the stale tasting air. This place has not been used in a long time.|0|0|2|0
 5|Dining Room|A long dining table set for one. Silverware neatly arranged awaiting Guest that seem to have never came.|7|0|0|1

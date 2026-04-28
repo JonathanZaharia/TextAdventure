@@ -78,7 +78,7 @@ public class GameView {
         printLine("Room " + room.getRoomNumber() + ": " + room.getName());
         printLine(room.getDescription());
         if (room.isVisited())
-            printLine("This room looks familiar");
+            printLine("You have been here before.");
     }
 
     public static void displayRoomFooter(Room room) {
