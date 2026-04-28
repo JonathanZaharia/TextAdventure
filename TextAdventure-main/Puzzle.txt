@@ -1,10 +1,10 @@
 # Format: roomNumber|name|description|correctAnswer|successMessage|rewardItemName|allowedAttempts
 # rewardItemName must match an item name in Items.txt exactly (leave empty for no reward)
 
-3|Drawer|The locked drawer has a word input mechanism. A scratched note says: “In a place where knowledge rests and whispers linger, speak its name to begin.”|Library|The drawer unlocks with surprising ease.|Brass Key|4
+3|Drawer|The locked drawer has a word input mechanism. A scratched note says: 'In a place where knowledge rests and whispers linger, speak its name to begin.'|Library|The drawer unlocks with surprising ease.|Brass Key|4
 6|Locked Pantry Door|The pantry door keypad glows faintly. A 4-digit code is required.|4510|The keypad flashes green instantly.|StairA Key|4
-10|Reflection Word Puzzle|The locked box has a word input. A note beside it says: “What the guilty could never steal is claimed, not shown. The mirror bears its name.”|Victory|The box opens smoothly. No rust. No hesitation.|Observatory Access Card|4
-12|Roman Numeral Combination|The wall safe requires a 3-number sequence. A note says: "The medicine cabinet hides Roman truth: XII, I, IV." Enter the sequence in this format: ##-#-#.|12-1-4|The safe opens immediately, as if recently serviced.|StairB Key|4
+10|Reflection Word Puzzle|The locked box has a word input. A note beside it says: 'What the guilty could never steal is claimed, not shown. The mirror bears its name.'|Victory|The box opens smoothly. No rust. No hesitation.|Observatory Access Card|4
+12|Roman Numeral Combination|The wall safe requires a 3-number sequence. A note says: 'The medicine cabinet hides Roman truth: XII, I, IV.' Enter the sequence in this format: ##-#-#.|12-1-4|The safe opens immediately, as if recently serviced.|StairB Key|4
 16|The Victim's Order|Four portraits hang beside the locked display case. Each portrait has a year beneath it: 1900, 1898, 1895, 1902. Enter the years from oldest to newest, separated by spaces.|1895 1898 1900 1902|A faint click echoes. The display case unlocks.|Shadow Blade|4
 18|Select the Truth|The black book lists three statements: 1. The butler escaped before midnight. 2. The detective hid the evidence. 3. Mrs. Blackwood never left the conservatory. Enter the number of the true statement.|3|The truth resonates. A hidden mechanism activates.|R19 Key|4
-19|Final Statement|The typewriter waits beside old case folders. One folder is marked: "Case 2134 — Blackwood." Enter the 4-digit case number.|2134|The typewriter prints: CASE CLOSED.|R20 Key|4
+19|Final Statement|The typewriter waits beside old case folders. One folder is marked: 'Case 2134 — Blackwood.' Enter the 4-digit case number.|2134|The typewriter prints: CASE CLOSED.|R20 Key|4
