@@ -1,12 +1,13 @@
 # Format: name|description|type|attackBonus|healAmount|roomNumber
 # roomNumber 0 = not placed in a room (granted via puzzle reward or monster drop)
-# Keep only WEAPON, CONSUMABLE, and KEY for compatibility with the current code.
+# Keep only WEAPON, CONSUMABLE, KEY, and CLUE for compatibility with the current code.
 
 # Weapons
 Rusted Knife|A stained kitchen knife recovered from the mansion. Light, fast, and still sharp enough to fight with.|WEAPON|3|0|0
 Broken Sword|A cracked ceremonial sword pulled from the mansion's shadows. Damaged, but still dangerous in close combat.|WEAPON|5|0|0
 Heavy Axe|A brutal two-handed axe with a worn handle and a heavy iron head built for powerful strikes.|WEAPON|7|0|0
 Shadow Blade|A dark blade humming with unnatural energy, as if the mansion itself forged it for the final climb.|WEAPON|9|0|0
+Bloodied Dagger|A narrow dagger stained dark from the grip to the tip. It is quick, balanced, and clearly handled with care.|WEAPON|4|0|0
 Silver Knife|A silver dining knife covered in red liquid. It is small, but sharp enough to use as an early weapon.|WEAPON|2|0|1
 
 # Consumables
@@ -14,6 +15,8 @@ Med Kit|A compact medical kit stocked with bandages and antiseptic supplies. Res
 Medicine Bottle|A dusty medicine bottle from the bathroom cabinet. Restores a moderate amount of health.|CONSUMABLE|0|6|0
 Bandage|A small roll of bandages found among the mansion supplies. Restores a small amount of health.|CONSUMABLE|0|4|4
 First Aid Kit|A larger emergency kit left near the upper hallway. Restores a good amount of health.|CONSUMABLE|0|8|15
+Smelling Salts|A sharp vial of salts tucked into a velvet pouch. Restores a small amount of health.|CONSUMABLE|0|3|2
+Painkillers|A small tin of painkillers from the guest suite. Restores a moderate amount of health.|CONSUMABLE|0|6|11
 
 # Keys and progression items
 Brass Key|A small brass key with worn markings. It unlocks the Library.|KEY|0|0|0
@@ -22,3 +25,11 @@ StairB Key|A cold metal key marked with the letter B. It unlocks Stair B Hall.|K
 R19 Key|A stamped case key tied to the Evidence Archive and the mansion's final records.|KEY|0|0|0
 R20 Key|A final chamber key meant for the mansion's last locked room and the end of the investigation.|KEY|0|0|0
 Observatory Access Card|A plastic access card with a magnetic strip, preserved here as a key-type item for compatibility with the current puzzle setup.|KEY|0|0|0
+
+# Clues
+Torn Letter|A torn letter from a guest warning that Mrs. Blackwood "does not let witnesses leave."|CLUE|0|0|2
+Servant Ledger|A house ledger listing hush payments and dates that match the disappearances.|CLUE|0|0|3
+Legal Draft|A draft affidavit naming Mrs. Blackwood before the ink was blotted out.|CLUE|0|0|12
+Wire Receipt|A receipt for a shipment of wire and restraints signed "E. Blackwood."|CLUE|0|0|17
+Archive Memo|A memo ordering files destroyed by Mrs. Blackwood's hand.|CLUE|0|0|19
+Conservatory Draft|A confession draft half-torn, with her name on the signature line.|CLUE|0|0|13

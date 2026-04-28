@@ -4,8 +4,21 @@ public class GameView {
 
     private static final int MAX_LINE_LENGTH = 60;
     private static final String DIVIDER = "============================================================";
+    private static boolean pendingChoiceSpacing = false;
 
     public static void printLine(String message) {
+        if (pendingChoiceSpacing) {
+            System.out.println();
+            pendingChoiceSpacing = false;
+            if (message == null || message.isEmpty()) {
+                return;
+            }
+
+            if (message.startsWith("\n")) {
+                message = message.substring(1);
+            }
+        }
+
         if (message == null) {
             System.out.println();
             return;
@@ -18,33 +31,44 @@ public class GameView {
     }
 
     public static void print(String message) {
+        if (pendingChoiceSpacing) {
+            System.out.println();
+            pendingChoiceSpacing = false;
+            if (message != null && message.startsWith("\n")) {
+                message = message.substring(1);
+            }
+        }
         System.out.print(message);
     }
 
+    public static void markChoiceSubmitted() {
+        pendingChoiceSpacing = true;
+    }
+
     public static void printWelcome() {
-        System.out.println("============================================================");
-        System.out.println("             THE BLACKWOOD MANSION MYSTERY");
-        System.out.println("============================================================");
-        System.out.println();
-        System.out.println("The year is 1923. You are a private detective summoned to");
-        System.out.println("Blackwood Mansion after the sudden disappearance of three");
-        System.out.println("guests - and the silence of Mrs. Eleanor Blackwood.");
-        System.out.println();
-        System.out.println("The police closed the case. You didn't.");
-        System.out.println();
-        System.out.println("Your goal: reach the top floor, uncover the truth, and");
-        System.out.println("confront whatever is waiting in the Conservatory.");
-        System.out.println();
-        System.out.println("During the game, you can:");
-        System.out.println("- Type HELP for a list of possible commands.");
-        System.out.println("- Type OBJ to view your current objective.");
-        System.out.println();
-        System.out.print("Press ENTER to step into the Blackwood Mansion:");
+        printLine("============================================================");
+        printLine("             THE BLACKWOOD MANSION MYSTERY");
+        printLine("============================================================");
+        printLine("");
+        printLine("The year is 1923. You are a private detective summoned to");
+        printLine("Blackwood Mansion after the sudden disappearance of three");
+        printLine("guests - and the silence of Mrs. Eleanor Blackwood.");
+        printLine("");
+        printLine("The police closed the case. You didn't.");
+        printLine("");
+        printLine("Your goal: reach the top floor, uncover the truth, and");
+        printLine("confront whatever is waiting in the Conservatory.");
+        printLine("");
+        printLine("During the game, you can:");
+        printLine("- Type HELP for a list of possible commands.");
+        printLine("- Type OBJ to view your current objective.");
+        printLine("");
+        print("Press ENTER to step into the Blackwood Mansion:");
     }
 
     public static void printGoodLuck() {
-        System.out.println();
-        System.out.println("Good Luck!");
+        printLine("");
+        printLine("Good Luck!");
     }
 
     public static void displayRoomHeader(Room room) {
@@ -216,7 +240,7 @@ public class GameView {
         printLine("");
         printLine("  Exploration:");
         printLine("  SEARCH                Search the room for items");
-        printLine("  LOOK                  Reprint the room description");
+        printLine("  LOOK                  Reprint the room name and description");
         printLine("  INSPECT [item]        Examine an item or monster");
         printLine("");
         printLine("  Items:");

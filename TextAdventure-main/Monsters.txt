@@ -4,7 +4,7 @@
 # M06 and M07 were assigned to Basement in the SRS; reassigned to rooms 6 and 7 (no basement exists)
 
 1|Restless Spirit|A faint translucent figure that whispers unintelligibly. It drifts toward you with hollow eyes.|14|2|0.10|Rusted Knife
-5|Blood Servant|A pale figure stained with dried crimson. It moves with unsettling calm.|18|3|0.15|Rusted Knife
+5|Blood Servant|A pale figure stained with dried crimson. It moves with unsettling calm.|18|3|0.15|Bloodied Dagger
 6|Pantry Ghoul|A hunched creature gnawing on something unseen in the kitchen shadows.|16|3|0.10|Med Kit
 7|Stair Guardian|A tall armored entity blocking the staircase. It does not speak, only watches.|23|4|0.15|StairB Key
 8|Charred Scholar|A charred figure clutching a burned book. Its pages still smolder.|18|3|0.15|Broken Sword

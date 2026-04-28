@@ -3,21 +3,22 @@ package adventure;
 public class Item {
 
     // Item types used in Items.txt
-    public static final String WEAPON     = "WEAPON";
+    public static final String WEAPON = "WEAPON";
     public static final String CONSUMABLE = "CONSUMABLE";
-    public static final String KEY        = "KEY";
+    public static final String KEY = "KEY";
+    public static final String CLUE = "CLUE";
 
     private final String name;
     private final String description;
     private final String type;
-    private final int attackBonus;   // bonus damage when equipped (weapons only)
-    private final int healAmount;    // HP restored when consumed (consumables only)
+    private final int attackBonus; // bonus damage when equipped (weapons only)
+    private final int healAmount; // HP restored when consumed (consumables only)
 
     // IMPORTANT: 0 = inventory, >0 = room number
     private int currentLocation;
 
     public Item(String name, String description, String type,
-                int attackBonus, int healAmount, int currentLocation) {
+            int attackBonus, int healAmount, int currentLocation) {
 
         this.name = name != null ? name.trim() : "";
         this.description = description != null ? description.trim() : "";
@@ -40,6 +41,7 @@ public class Item {
             case WEAPON:
             case CONSUMABLE:
             case KEY:
+            case CLUE:
                 return normalized;
             default:
                 return CONSUMABLE;
@@ -111,6 +113,10 @@ public class Item {
         return KEY.equals(type);
     }
 
+    public boolean isClue() {
+        return CLUE.equals(type);
+    }
+
     public boolean isEquippable() {
         return isWeapon();
     }
@@ -134,7 +140,7 @@ public class Item {
 
         for (Item item : items) {
             if (item != null && item.getName() != null &&
-                item.getName().equalsIgnoreCase(target)) {
+                    item.getName().equalsIgnoreCase(target)) {
                 return item;
             }
         }

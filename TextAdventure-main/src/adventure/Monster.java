@@ -76,6 +76,10 @@ public class Monster {
         this.ignored = true;
     }
 
+    public void clearIgnored() {
+        this.ignored = false;
+    }
+
     public void takeDamage(int amount) {
         currentHealth = Math.max(0, currentHealth - amount);
     }

@@ -50,10 +50,12 @@ public class GameController {
                 GameView.print("\nChoice: ");
 
                 String startChoice = input.nextLine().trim();
+                GameView.markChoiceSubmitted();
                 switch (startChoice) {
                     case "1" -> {
                         GameView.printWelcome();
                         input.nextLine();
+                        GameView.markChoiceSubmitted();
                         GameView.printGoodLuck();
                         started = true;
                     }
@@ -108,10 +110,12 @@ public class GameController {
                         }
                     }
 
-                    // Monster encounter on entry and reset
+                    // Monster encounter on entry; if the player fled earlier, allow a fresh
+                    // encounter
+                    // without restoring the monster's health.
                     Monster m = Monster.findByRoomNumber(monsters, currentRoomNumber);
                     if (m != null && m.isIgnored()) {
-                        m.reset();
+                        m.clearIgnored();
                     }
 
                     Monster monster = Monster.findActiveByRoomNumber(monsters, currentRoomNumber);
@@ -170,6 +174,7 @@ public class GameController {
 
                 GameView.print("\nChoice: ");
                 String inputLine = input.nextLine().trim();
+                GameView.markChoiceSubmitted();
 
                 if (inputLine.isEmpty()) {
                     continue;
@@ -219,6 +224,7 @@ public class GameController {
                     }
 
                     case "LOOK" -> {
+                        GameView.printLine("Room " + current.getRoomNumber() + ": " + current.getName());
                         GameView.printLine(current.getDescription());
                     }
 
@@ -388,6 +394,7 @@ public class GameController {
         while (true) {
             GameView.print("\nChoice: ");
             String choice = input.nextLine().trim().toUpperCase();
+            GameView.markChoiceSubmitted();
 
             if (choice.equals("SOLVE")) {
                 return handlePuzzleSolveMenu(puzzle, player, allItems, room, input);
@@ -399,6 +406,7 @@ public class GameController {
             }
 
             if (choice.equals("LOOK")) {
+                GameView.printLine("Room " + room.getRoomNumber() + ": " + room.getName());
                 GameView.printLine(room.getDescription());
                 GameView.printLine(puzzle.getDescription());
             } else {
@@ -418,6 +426,7 @@ public class GameController {
             GameView.print("[Attempt " + attemptNumber + "/" + puzzle.getAllowedAttempts() + "] Answer: ");
 
             String answer = input.nextLine().trim();
+            GameView.markChoiceSubmitted();
 
             if (answer.equalsIgnoreCase("IGNORE")) {
                 GameView.printLine("You step away from the puzzle.");
@@ -425,6 +434,7 @@ public class GameController {
             }
 
             if (answer.equalsIgnoreCase("LOOK")) {
+                GameView.printLine("Room " + room.getRoomNumber() + ": " + room.getName());
                 GameView.printLine(room.getDescription());
                 GameView.printLine(puzzle.getDescription());
                 continue;
@@ -471,6 +481,7 @@ public class GameController {
             GameView.print("\nChoice: ");
 
             String choice = input.nextLine().trim().toUpperCase();
+            GameView.markChoiceSubmitted();
             if (choice.equals("GUILTY")) {
                 return true;
             }
@@ -492,6 +503,7 @@ public class GameController {
         while (true) {
             GameView.print("\nChoice: ");
             String inputLine = input.nextLine().trim();
+            GameView.markChoiceSubmitted();
 
             if (inputLine.isEmpty()) {
                 continue;
@@ -556,6 +568,7 @@ public class GameController {
             GameView.printCombatCommandsPrompt();
 
             String line = input.nextLine().trim();
+            GameView.markChoiceSubmitted();
 
             if (line.isEmpty()) {
                 continue;
@@ -657,6 +670,7 @@ public class GameController {
         while (true) {
             GameView.print("\nChoice: ");
             String choice = input.nextLine().trim();
+            GameView.markChoiceSubmitted();
 
             if (choice.equals("1")) {
                 return 1;
@@ -695,6 +709,7 @@ public class GameController {
         for (Item item : allItems) {
             if (item.getName().equalsIgnoreCase(monster.getDropItemName())) {
                 room.addItem(item);
+                item.moveToRoom(room.getRoomNumber());
                 GameView.printMonsterDrop(monster.getName(), item.getName());
                 return;
             }
@@ -704,18 +719,21 @@ public class GameController {
     private static void handleInspectCommand(Player player, Room room, Monster[] monsters, String target) {
         Item roomItem = room.findItem(target);
         if (roomItem != null) {
+            GameView.printLine("");
             GameView.printLine(roomItem.getName() + ": " + roomItem.getDescription());
             return;
         }
 
         Item invItem = player.getItemByName(target);
         if (invItem != null) {
+            GameView.printLine("");
             GameView.printLine(invItem.getName() + ": " + invItem.getDescription());
             return;
         }
 
         Monster monster = Monster.findActiveByRoomNumber(monsters, room.getRoomNumber());
         if (monster != null && monster.getName().equalsIgnoreCase(target)) {
+            GameView.printLine("");
             GameView.printLine(monster.getName() + ": " + monster.getDescription());
             GameView.printLine("Attack: " + monster.getAttackDamage() + " | HP: " + monster.getCurrentHealth() + "/"
                     + monster.getMaxHealth());
