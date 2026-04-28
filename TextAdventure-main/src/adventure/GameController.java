@@ -226,6 +226,15 @@ public class GameController {
                     case "LOOK" -> {
                         GameView.printLine("Room " + current.getRoomNumber() + ": " + current.getName());
                         GameView.printLine(current.getDescription());
+
+                        if (current.hasItems()) {
+                            GameView.printLine("You see:");
+                            for (Item item : current.getItems()) {
+                                GameView.printLine("  - " + item.getName());
+                            }
+                        } else {
+                            GameView.printLine("You do not see any items here.");
+                        }
                     }
 
                     case "PICKUP", "TAKE", "GET" -> {
